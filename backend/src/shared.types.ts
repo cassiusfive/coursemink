@@ -1,27 +1,30 @@
+export type Catalog = Course[];
+
 export interface Course {
-    crn: number,
     title: string,
-    type: string,
-    term: string,
-    campus: string,
+    code: string,
+    offerings: Offering[]
+};
+
+export type Offering = SectionType[];
+
+export interface SectionType {
+    name: string,
+    sections: Section[]
+};
+
+export interface Section {
+    crn: number,
     credits: number,
     maxEnrollment: number,
     enrollment: number,
-    linked: boolean,
-    linkIdentifier: string,
     instructorName: string,
     instructorEmail: string,
-    timeTable: TimeTable
-}
-
-export interface TimeTable {
     start: number,
     end: number,
-    days: boolean[]
-    // M W T R F
-}
-
-export interface TimeRange {
-    start: number,
-    end: number
+    isMondayIncluded: boolean,
+    isTuesdayIncluded: boolean,
+    isThursdayIncluded: boolean,
+    isWednesdayIncluded: boolean,
+    isFridayIncluded: boolean
 }
