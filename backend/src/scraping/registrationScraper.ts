@@ -1,25 +1,105 @@
-import axios, { AxiosResponse } from "axios";
-import { Course, TimeTable } from "../shared.types";
+import axios from "axios";
+import { CourseCatalog, Course, Offering, SectionType, Section } from "../shared.types";
 
 export default class RegistrationScraper {
-    private cookies: string;
+    private axiosInstance = axios.create({
+        baseURL: 'https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/',
+        withCredentials: true,
+    });
 
-    public static async create(): Promise<RegistrationScraper> {
-        const Scraper = new RegistrationScraper();
-        await Scraper.getCookies();
-        return Scraper;
-    }
-
-    public async getCookies(): Promise<void> {
-        const data = {
-            term: 202402
-        }
-
-        const selectTerm = await axios.post('https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/term/search?mode=search', data, {
-            headers: {'content-type': 'application/x-www-form-urlencoded'}
+    public async scrapeCourse(title: string): Promise<Course> {
+        const setTerm = await this.axiosInstance.post('term/search?mode=search', { term: 202402 }, {
+            headers: {'content-type': 'application/x-www-form-urlencoded'},
         });
 
-        this.cookies = selectTerm.headers['set-cookie']?.join('; ') || '';
+        const cookies = setTerm.headers['set-cookie']?.join('; ') || '';
+
+        const courseSearch = await this.axiosInstance.get('searchResults/searchResults', {
+            params: {
+                txt_campus: 'C',
+                txt_term: 202402,
+                txt_courseTitle: title,
+                pageOffset: 0,
+                pageMaxSize: 500,
+            },
+            headers: {
+                Cookie: cookies
+            }
+        });
+
+        return this.normalizeCourseData(courseSearch.data.data);
+    }
+
+    private normalizeCourseData(data: any): Course {
+        if (!data) { throw new Error("No data provided") }
+        data = data.filter((rawSection: any) => {
+            const excludedAttributes = ['HNRS'];
+            if (rawSection?.faculty.length != 1) {
+                return false;
+            }
+            if (rawSection?.meetingsFaculty.length != 1 ) {
+                return false;
+            }
+            if (rawSection.sectionAttributes?.some((attribute: any) => excludedAttributes.includes(attribute.code))) {
+                return false;
+            }
+            return true;
+        });
+
+        if (data.length == 0) { throw new Error("Course data not normalized") }
+
+        const course: Course = {
+            title: data[0].courseTitle,
+            code: data[0].subject + ' ' + data[0].courseNumber,
+            offerings: [],
+        };
+
+        const linkedGroups: Record<string, Record<string, Section[]>> = {};
+
+        for (const section of data) {
+            const linker = this.extractLink(section?.linkIdentifier);
+            if (!linkedGroups[linker]) {
+                linkedGroups[linker] = {};
+            }
+            if (!linkedGroups[linker][section.scheduleTypeDescription]) {
+                linkedGroups[linker][section.scheduleTypeDescription] = [];
+            }
+            linkedGroups[linker][section.scheduleTypeDescription].push({
+                crn: section.courseReferenceNumber,
+                credits: section.creditHours,
+                maxEnrollment: section.maximumEnrollment,
+                enrollment: section.enrollment,
+                instructorName: section.faculty[0].displayName,
+                instructorEmail: section.faculty[0].emailAddress,
+                schedule: {
+                    start: this.normalizeTime(section.meetingsFaculty[0].meetingTime.beginTime),
+                    end: this.normalizeTime(section.meetingsFaculty[0].meetingTime.endTime),
+                },
+                isMondayIncluded: section.meetingsFaculty[0].meetingTime.monday,
+                isTuesdayIncluded: section.meetingsFaculty[0].meetingTime.tuesday,
+                isThursdayIncluded: section.meetingsFaculty[0].meetingTime.thursday,
+                isWednesdayIncluded: section.meetingsFaculty[0].meetingTime.wednesday,
+                isFridayIncluded: section.meetingsFaculty[0].meetingTime.friday
+            })
+        }
+
+        for (const linker in linkedGroups) {
+            const offering: Offering = [];
+            for (const type in linkedGroups[linker]) {
+                offering.push({
+                    name: type,
+                    sections: linkedGroups[linker][type]
+                });
+            }
+            course.offerings.push(offering);
+        }
+
+        return course;
+    }
+
+    private extractLink(linkIdentifier: string | undefined) {
+        if (!linkIdentifier) {return 'NONE'}
+        return linkIdentifier.replace(/[^a-zA-Z]/g, '');
     }
 
     private normalizeTime(time: string): number {
@@ -27,82 +107,4 @@ export default class RegistrationScraper {
         return parseInt(time.slice(0, 2)) * 60 + parseInt(time.slice(2, 4));
     }
 
-    private normalizeCourseData(data: any): Array<Course> {
-        let courses: Array<Course> = [];
-        const badAttributes = ['HNRS'];
-
-        data.forEach((course: any) => {
-            if (course.sectionAttributes?.some((attribute: any) => badAttributes.includes(attribute.code))) {
-                // remove bad attributes
-            } else if (course.maxEnrollment < 10 || !course.meetingsFaculty) {
-                // filter out exams
-            } else if (!course.meetingsFaculty[0]?.meetingTime?.beginTime) {
-                // filter no schedule
-            } else {
-                const timeTable: TimeTable = {
-                    start: this.normalizeTime(course.meetingsFaculty[0].meetingTime.beginTime),
-                    end: this.normalizeTime(course.meetingsFaculty[0].meetingTime.endTime),
-                    days: [
-                        course.meetingsFaculty[0].meetingTime.monday,
-                        course.meetingsFaculty[0].meetingTime.tuesday,
-                        course.meetingsFaculty[0].meetingTime.wednesday,
-                        course.meetingsFaculty[0].meetingTime.thursday,
-                        course.meetingsFaculty[0].meetingTime.friday
-                    ]
-                };
-                courses.push({
-                    crn: course.courseReferenceNumber,
-                    title: course.courseTitle,
-                    type: course.scheduleTypeDescription,
-                    term: course.term,
-                    campus: course.campusDescription,
-                    credits: course.creditHours,
-                    maxEnrollment: course.maximumEnrollment,
-                    enrollment: course.enrollment,
-                    linked: course.isSectionLinked,
-                    linkIdentifier: course?.linkIdentifier,
-                    instructorName: course.faculty[0]?.displayName || '',
-                    instructorEmail: course.faculty[0]?.emailAddress || '',
-                    timeTable: timeTable
-                });
-            }
-        });
-
-        return courses;
-    }
-
-    public async getCourses(title: string = ''): Promise<Array<Course>> {
-        const res = await axios.get('https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/searchResults/searchResults', {
-            headers: {'Cookie': this.cookies},
-            params: {
-                txt_campus: 'C',
-                txt_term: 202402,
-                txt_courseTitle: title,
-                pageOffset: 0,
-                pageMaxSize: 500,
-            }
-        });
-
-        let courses: Array<Course> = [];
-        const badAttributes = ['HNRS'];
-
-        return this.normalizeCourseData(res.data.data);
-    }
-
-    public async getLinked(crn: number | string): Promise<Array<Course>> {
-        const res = await axios.get('https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/searchResults/fetchLinkedSections', {
-            headers: {'Cookie': this.cookies},
-            params: {
-                term: 202402,
-                courseReferenceNumber: crn,
-            }
-        });
-
-        return this.normalizeCourseData(res.data.linkedData.flat());
-    }
-
-    constructor() {
-        this.cookies = '';
-    }
 }
-
