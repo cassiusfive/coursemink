@@ -9,6 +9,7 @@ interface SchedulerWeights {
     // Soft constraints
     preferredStartTime?: number,
     preferredEndTime?: number,
+    timePreferencePenalty?: number,
     timeCohesionPenalty?: number,
     timeDispersionPenalty?: number
 }
@@ -16,10 +17,13 @@ interface SchedulerWeights {
 export default class Scheduler {
     public static defaultWeights: SchedulerWeights = {
         overlapPenalty: -1000, // Filter schedule defects
+
         preferredStartTime: 0, // 12:00am
         preferredEndTime: 1440, // 12:00pm
-        timeCohesionPenalty: 0, // Minimize time between first and last class (per hour)
-        timeDispersionPenalty: 0, // Minimize differences in class time (per credit delta)
+        timePreferencePenalty: -50,
+
+        timeCohesionPenalty: -0.1, // Minimize time between first and last class (per minute delta)
+        timeDispersionPenalty: 0, // Minimize differences in class time (per minute delta)
     }
 
     public static findOptimal(catalog: CourseCatalog, config: SchedulerWeights = {}): Schedule {
@@ -38,10 +42,10 @@ export default class Scheduler {
     }
 
     private static overrideDefaults(config: SchedulerWeights): SchedulerWeights {
-        for (const key in config) {
+        for (const key in Scheduler.defaultWeights) {
             config[key as keyof SchedulerWeights] = config[key as keyof SchedulerWeights] || Scheduler.defaultWeights[key as keyof SchedulerWeights];
         }
-        return config
+        return config;
     }
 
     private static scheduleFitness(schedule: Schedule, config: SchedulerWeights): number {
@@ -62,6 +66,10 @@ export default class Scheduler {
         }
 
         fitness += this.dayFitness(mondaySchedule, config);
+        fitness += this.dayFitness(tuesdaySchedule, config);
+        fitness += this.dayFitness(wednesdaySchedule, config);
+        fitness += this.dayFitness(thursdaySchedule, config);
+        fitness += this.dayFitness(fridaySchedule, config);
 
         return fitness
     }   
@@ -75,12 +83,17 @@ export default class Scheduler {
         let fitness = 0;
         let startOfDay = Infinity;
         let endOfDay = -Infinity;
-        if (this.timeConflict(daySchedule)) {
-            fitness += config.overlapPenalty!;
-        }
         for (const timeRange of daySchedule) {
             startOfDay = Math.min(startOfDay, timeRange.start);
             endOfDay = Math.max(endOfDay, timeRange.end);
+        }
+        if (this.timeConflict(daySchedule)) {
+            fitness += config.overlapPenalty!;
+        }
+        daySchedule.push({ start: 0, end: config.preferredStartTime! });
+        daySchedule.push({ start: config.preferredEndTime!, end: 24 * 60 });
+        if (this.timeConflict(daySchedule)) {
+            fitness += config.timePreferencePenalty!;
         }
         fitness += (endOfDay - startOfDay) * config.timeCohesionPenalty!;
         return fitness;

@@ -1,5 +1,6 @@
 import RegistrationScraper from "./scraping/registrationScraper.js";
 import Scheduler from "./scheduling/scheduler.js";
+import { Course } from "./shared.types.js";
 
 const scraper = new RegistrationScraper();
 
@@ -11,12 +12,15 @@ const courseNames = [
     '*HISTORY OF THE UNITED STATES',
 ]
 
-const courses = [];
+const courses: Course[] = [];
 
 for (const courseName of courseNames) {
     courses.push(await scraper.scrapeCourse(courseName));
 }
 
-for (const schedule of Scheduler.generateSchedules(courses)) {
-    console.log(schedule);
-}
+const bestSchedule = Scheduler.findOptimal(courses, {
+    preferredStartTime: 600,
+    preferredEndTime: 1020
+})
+
+console.log(bestSchedule);
