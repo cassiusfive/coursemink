@@ -1,5 +1,5 @@
-import axios, {AxiosInstance} from "axios";
-import { Catalog, Course, Offering, SectionType, Section } from "../shared.types";
+import axios from "axios";
+import { CourseCatalog, Course, Offering, SectionType, Section } from "../shared.types";
 
 export default class RegistrationScraper {
     private axiosInstance = axios.create({
@@ -71,8 +71,10 @@ export default class RegistrationScraper {
                 enrollment: section.enrollment,
                 instructorName: section.faculty[0].displayName,
                 instructorEmail: section.faculty[0].emailAddress,
-                start: this.normalizeTime(section.meetingsFaculty[0].meetingTime.beginTime),
-                end: this.normalizeTime(section.meetingsFaculty[0].meetingTime.endTime),
+                schedule: {
+                    start: this.normalizeTime(section.meetingsFaculty[0].meetingTime.beginTime),
+                    end: this.normalizeTime(section.meetingsFaculty[0].meetingTime.endTime),
+                },
                 isMondayIncluded: section.meetingsFaculty[0].meetingTime.monday,
                 isTuesdayIncluded: section.meetingsFaculty[0].meetingTime.tuesday,
                 isThursdayIncluded: section.meetingsFaculty[0].meetingTime.thursday,

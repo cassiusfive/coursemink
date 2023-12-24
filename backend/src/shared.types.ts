@@ -1,4 +1,4 @@
-export type Catalog = Course[];
+export type CourseCatalog = Course[];
 
 export interface Course {
     title: string,
@@ -20,11 +20,15 @@ export interface Section {
     enrollment: number,
     instructorName: string,
     instructorEmail: string,
-    start: number,
-    end: number,
+    schedule: TimeRange,
     isMondayIncluded: boolean,
     isTuesdayIncluded: boolean,
     isThursdayIncluded: boolean,
     isWednesdayIncluded: boolean,
     isFridayIncluded: boolean
-}
+};
+
+export interface TimeRange {
+    start: number,
+    end: number
+};
