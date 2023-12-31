@@ -1,5 +1,5 @@
-import RegistrationScraper from "./scraping/registrationScraper.js";
-import Scheduler from "./scheduling/scheduler.js";
+import RegistrationScraper from "./services/scraper.js";
+import Scheduler from "./services/scheduler.js";
 import { Course } from "./shared.types.js";
 
 const scraper = new RegistrationScraper();

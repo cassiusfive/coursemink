@@ -1,7 +1,7 @@
 import axios from "axios";
 import { CourseCatalog, Course, Offering, SectionType, Section } from "../shared.types";
 
-export default class RegistrationScraper {
+class RegistrationScraper {
     private axiosInstance = axios.create({
         baseURL: 'https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/',
         withCredentials: true,
@@ -108,3 +108,6 @@ export default class RegistrationScraper {
     }
 
 }
+
+const scraper = new RegistrationScraper();
+export default scraper;
