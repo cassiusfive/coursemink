@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import { Pool } from "pg";
+import pg from "pg";
 dotenv.config();
 
-const pool = new Pool({
+const pool = new pg.Pool({
 	max: 20,
 	idleTimeoutMillis: 30000,
 	connectionTimeoutMillis: 2000

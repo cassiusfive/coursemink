@@ -7,8 +7,8 @@ interface SchedulerWeights {
     overlapPenalty?: number,
 
     // Soft constraints
-    preferredStartTime?: number,
-    preferredEndTime?: number,
+    preferredStartTime?: Date,
+    preferredEndTime?: Date,
     timePreferencePenalty?: number,
     timeCohesionPenalty?: number,
     timeDispersionPenalty?: number
@@ -18,8 +18,8 @@ class Scheduler {
     public static defaultWeights: SchedulerWeights = {
         overlapPenalty: -1000, // Filter schedule defects
 
-        preferredStartTime: 0, // 12:00am
-        preferredEndTime: 1440, // 12:00pm
+        preferredStartTime: new Date(0), // 12:00am
+        preferredEndTime: new Date(86400000), // 12:00pm
         timePreferencePenalty: -50,
 
         timeCohesionPenalty: -0.1, // Minimize time between first and last class (per minute delta)
@@ -42,10 +42,7 @@ class Scheduler {
     }
 
     private static overrideDefaults(config: SchedulerWeights): SchedulerWeights {
-        for (const key in Scheduler.defaultWeights) {
-            config[key as keyof SchedulerWeights] = config[key as keyof SchedulerWeights] || Scheduler.defaultWeights[key as keyof SchedulerWeights];
-        }
-        return config;
+        return Object.assign({}, this.defaultWeights, config);
     }
 
     private static scheduleFitness(schedule: Schedule, config: SchedulerWeights): number {
@@ -58,11 +55,12 @@ class Scheduler {
 
         for (const section of schedule) {
             fitness += this.sectionFitness(section, config);
-            if (section.isMondayIncluded) { mondaySchedule.push(section.schedule); }
-            if (section.isTuesdayIncluded) { tuesdaySchedule.push(section.schedule); }
-            if (section.isWednesdayIncluded) { wednesdaySchedule.push(section.schedule); }
-            if (section.isThursdayIncluded) { thursdaySchedule.push(section.schedule); }
-            if (section.isFridayIncluded) { fridaySchedule.push(section.schedule); }
+			const timeRange: TimeRange = {start: section.start, end: section.end};
+            if (section.onMonday) { mondaySchedule.push(timeRange); }
+            if (section.onTuesday) { tuesdaySchedule.push(timeRange); }
+            if (section.onWednesday) { wednesdaySchedule.push(timeRange); }
+            if (section.onThursday) { thursdaySchedule.push(timeRange); }
+            if (section.onFriday) { fridaySchedule.push(timeRange); }
         }
 
         fitness += this.dayFitness(mondaySchedule, config);
@@ -84,14 +82,14 @@ class Scheduler {
         let startOfDay = Infinity;
         let endOfDay = -Infinity;
         for (const timeRange of daySchedule) {
-            startOfDay = Math.min(startOfDay, timeRange.start);
-            endOfDay = Math.max(endOfDay, timeRange.end);
+            startOfDay = Math.min(startOfDay, timeRange.start.getTime());
+            endOfDay = Math.max(endOfDay, timeRange.end.getTime());
         }
         if (this.timeConflict(daySchedule)) {
             fitness += config.overlapPenalty!;
         }
-        daySchedule.push({ start: 0, end: config.preferredStartTime! });
-        daySchedule.push({ start: config.preferredEndTime!, end: 24 * 60 });
+        daySchedule.push({ start: new Date(0), end: config.preferredStartTime! });
+        daySchedule.push({ start: config.preferredEndTime!, end: new Date(86400000) });
         if (this.timeConflict(daySchedule)) {
             fitness += config.timePreferencePenalty!;
         }
@@ -100,7 +98,7 @@ class Scheduler {
     }
 
     private static timeConflict(daySchedule: TimeRange[]): boolean {
-        daySchedule.sort((a, b) => a.end - b.end);
+        daySchedule.sort((a, b) => a.start.getTime() - b.end.getTime());
         for (let i = 1; i < daySchedule.length; i++) {
             const a = daySchedule[i - 1];
             const b = daySchedule[i];

@@ -1,8 +1,7 @@
-import RegistrationScraper from "./services/scraper.js";
+import scraper from "./services/scraper.js";
 import Scheduler from "./services/scheduler.js";
 import { Course } from "./shared.types.js";
-
-const scraper = new RegistrationScraper();
+import CourseServices from "./services/courseServices.js";
 
 const courseNames = [
     'VECTOR CALCULUS I',
@@ -12,15 +11,19 @@ const courseNames = [
     '*HISTORY OF THE UNITED STATES',
 ]
 
-const courses: Course[] = [];
+// const courses: Course[] = [];
 
-for (const courseName of courseNames) {
-    courses.push(await scraper.scrapeCourse(courseName));
+// const course = await scraper.scrapeCourse(courseNames[0]);
+
+// await CourseServices.insertCourse(course);
+try {
+	// const course = await scraper.scrapeCourse(courseNames[0]);
+	// await CourseServices.insertCourse(course);
+	const course = await CourseServices.getCourse(13);
+	console.log(course.offerings[0][1].sections)
+} catch (e) {
+	if (e instanceof Error) {
+		console.log(e)
+	}
 }
 
-const bestSchedule = Scheduler.findOptimal(courses, {
-    preferredStartTime: 600,
-    preferredEndTime: 1020
-})
-
-console.log(bestSchedule);

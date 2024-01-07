@@ -20,15 +20,16 @@ export interface Section {
     enrollment: number,
     instructorName: string,
     instructorEmail: string,
-    schedule: TimeRange,
-    isMondayIncluded: boolean,
-    isTuesdayIncluded: boolean,
-    isThursdayIncluded: boolean,
-    isWednesdayIncluded: boolean,
-    isFridayIncluded: boolean
+    start: Date,
+	end: Date,
+    onMonday: boolean,
+    onTuesday: boolean,
+    onWednesday: boolean,
+    onThursday: boolean,
+    onFriday: boolean
 };
 
 export interface TimeRange {
-    start: number,
-    end: number
+    start: Date,
+    end: Date
 };

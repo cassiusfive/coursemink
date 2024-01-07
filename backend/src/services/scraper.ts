@@ -1,6 +1,8 @@
 import axios from "axios";
 import { CourseCatalog, Course, Offering, SectionType, Section } from "../shared.types";
 
+import { parse } from "date-fns";
+
 class RegistrationScraper {
     private axiosInstance = axios.create({
         baseURL: 'https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/',
@@ -71,16 +73,14 @@ class RegistrationScraper {
                 enrollment: section.enrollment,
                 instructorName: section.faculty[0].displayName,
                 instructorEmail: section.faculty[0].emailAddress,
-                schedule: {
-                    start: this.normalizeTime(section.meetingsFaculty[0].meetingTime.beginTime),
-                    end: this.normalizeTime(section.meetingsFaculty[0].meetingTime.endTime),
-                },
-                isMondayIncluded: section.meetingsFaculty[0].meetingTime.monday,
-                isTuesdayIncluded: section.meetingsFaculty[0].meetingTime.tuesday,
-                isThursdayIncluded: section.meetingsFaculty[0].meetingTime.thursday,
-                isWednesdayIncluded: section.meetingsFaculty[0].meetingTime.wednesday,
-                isFridayIncluded: section.meetingsFaculty[0].meetingTime.friday
-            })
+                start: parse(section.meetingsFaculty[0].meetingTime.beginTime, 'HHmm', new Date(0)),
+                end: parse(section.meetingsFaculty[0].meetingTime.endTime, 'HHmm', new Date(0)),
+                onMonday: section.meetingsFaculty[0].meetingTime.monday,
+                onTuesday: section.meetingsFaculty[0].meetingTime.tuesday,
+                onWednesday: section.meetingsFaculty[0].meetingTime.thursday,
+                onThursday: section.meetingsFaculty[0].meetingTime.wednesday,
+                onFriday: section.meetingsFaculty[0].meetingTime.friday
+            });
         }
 
         for (const linker in linkedGroups) {
@@ -100,11 +100,6 @@ class RegistrationScraper {
     private extractLink(linkIdentifier: string | undefined) {
         if (!linkIdentifier) {return 'NONE'}
         return linkIdentifier.replace(/[^a-zA-Z]/g, '');
-    }
-
-    private normalizeTime(time: string): number {
-        if (time.length != 4) { return 9999; }
-        return parseInt(time.slice(0, 2)) * 60 + parseInt(time.slice(2, 4));
     }
 
 }
