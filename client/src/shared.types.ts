@@ -1,9 +1,10 @@
 export type CourseCatalog = Course[];
 
 export interface Course {
+	id?: number,
     title: string,
     code: string,
-    offerings: Offering[]
+    offerings?: Offering[]
 };
 
 export type Offering = SectionType[];
