@@ -1,17 +1,17 @@
-import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { useState } from "react";
+import { Course } from "../shared.types";
 
-export default class Scheduler extends React.Component {
-	state = {
-		courses: []
-	}
-	
-	render() {
-		return (
-			<Routes>
-				<Route path='/add' element={<h1>add course</h1>} />
-				<Route path='/milk' element={<h1>Hello</h1>} />
-			</Routes>
-		);
-	}
+import CourseSearch from "../components/CourseSearch";
+import CourseList from "../components/CourseList";
+
+const Scheduler = () => {
+	const [chosenCourses, setChosenCourses] = useState<Course[]>([]);
+
+	return <>
+		<CourseSearch courses={chosenCourses} setCourses={setChosenCourses}/>
+		<p></p>
+		<CourseList courses={chosenCourses} setCourses={setChosenCourses}/>
+	</>
 }
+
+export default Scheduler;

@@ -19,8 +19,9 @@ const courseNames = [
 try {
 	// const course = await scraper.scrapeCourse(courseNames[0]);
 	// await CourseServices.insertCourse(course);
-	const course = await CourseServices.getCourse(13);
-	console.log(course.offerings[0][1].sections)
+	// const course = await CourseServices.getCourse(13);
+	// console.log(course.offerings[0][1].sections)
+	console.log(await CourseServices.getCourses());
 } catch (e) {
 	if (e instanceof Error) {
 		console.log(e)

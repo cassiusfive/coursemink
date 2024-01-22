@@ -29,6 +29,14 @@ export default class CourseServices {
 		}
 	}
 
+	static async getCourses(): Promise<Course[]> {
+		const res = await pool.query(`
+		SELECT id, title, code FROM course
+		`);
+
+		return res.rows;
+	}
+
 	static async getCourse(id: number): Promise<Course> {
 		const res = await pool.query(`
 		SELECT JSONB_BUILD_OBJECT(
@@ -79,7 +87,6 @@ export default class CourseServices {
 				})
 			})
 		});
-
 		return res.rows[0].data;
 	}
 }

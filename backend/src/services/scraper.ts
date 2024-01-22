@@ -9,12 +9,78 @@ class RegistrationScraper {
         withCredentials: true,
     });
 
-    public async scrapeCourse(title: string): Promise<Course> {
-        const setTerm = await this.axiosInstance.post('term/search?mode=search', { term: 202402 }, {
+	private async setTerm(termCode: number | string): Promise<string> {
+		const res = await this.axiosInstance.post('term/search?mode=search', { term: 202402 }, {
             headers: {'content-type': 'application/x-www-form-urlencoded'},
         });
+		return res.headers['set-cookie']?.join('; ') || '';
+	}
 
-        const cookies = setTerm.headers['set-cookie']?.join('; ') || '';
+	public async scrapeEmptyCourses(): Promise<Course[]> {
+		const cookies = await this.setTerm(202402);
+
+		let set: Set<String> = new Set();
+		let courseList: Course[] = [];
+
+		const initialSearch = await this.axiosInstance.get('searchResults/searchResults', {
+            params: {
+                txt_campus: 'C',
+                txt_term: 202402,
+                pageOffset: 0,
+                pageMaxSize: 500,
+            },
+            headers: {
+                Cookie: cookies
+            }
+        });
+
+		let coursesSearched = 500;
+		const totalCourses: number = initialSearch.data.totalCount;
+
+		initialSearch.data.data.forEach((courseData: any) => {
+			const course: Course = {
+				title: courseData.courseTitle,
+				code: courseData.subjectCourse,
+				offerings: []
+			}
+			if (!set.has(course.code + course.title)) {
+				courseList.push(course)
+			}
+			set.add(course.code + course.title);
+		});
+
+		while (coursesSearched < totalCourses) {
+			const search = await this.axiosInstance.get('searchResults/searchResults', {
+				params: {
+					txt_campus: 'C',
+					txt_term: 202402,
+					pageOffset: coursesSearched,
+					pageMaxSize: 500,
+				},
+				headers: {
+					Cookie: cookies
+				}
+			});
+			coursesSearched += 500;
+
+			search.data.data.forEach((courseData: any) => {
+				const course: Course = {
+					title: courseData.courseTitle,
+					code: courseData.subjectCourse,
+					offerings: []
+				}
+				if (!set.has(course.code + course.title)) {
+					courseList.push(course)
+				}
+				set.add(course.code + course.title);
+			});
+		}
+
+		return courseList;
+	}
+
+    public async scrapeCourse(title: string): Promise<Course> {
+		const cookies = await this.setTerm(202402);
 
         const courseSearch = await this.axiosInstance.get('searchResults/searchResults', {
             params: {

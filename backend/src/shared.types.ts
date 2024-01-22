@@ -1,6 +1,7 @@
 export type CourseCatalog = Course[];
 
 export interface Course {
+	id?: number,
     title: string,
     code: string,
     offerings: Offering[]
