@@ -2,17 +2,31 @@ import pool from "../utils/database.js";
 import { Course } from "../shared.types.js";
 import { parse } from "date-fns";
 
+interface CourseInfo {
+	id: number,
+	title: string,
+	code: string,
+	updated_at: Date
+}
+
 export default class CourseServices {
-	static async insertCourse(course: Course): Promise<void> {
-		// Delete if already exists
-		await pool.query('DELETE FROM course WHERE title = $1', [course.title]);
+	static async insertCourse(course: Course, courseId?: number): Promise<void> {
 		// Insert course data
-		const courseSql = 'INSERT INTO course(title, code) VALUES($1, $2) RETURNING id';
-		const courseValues = [course.title, course.code];
-		const courseRes = await pool.query(courseSql, courseValues);
+		const now = new Date();
+		if (courseId) {
+			const courseSql = 'UPDATE course SET updated_at = $2 WHERE id = $1';
+			const courseValues = [courseId, now];
+			await pool.query(courseSql, courseValues);
+			await pool.query('DELETE FROM offering WHERE course_id = $1', [courseId]);
+		} else {
+			const courseSql = 'INSERT INTO course(title, code, updated_at) VALUES($1, $2, $3) RETURNING id';
+			const courseValues = [course.title, course.code, now];
+			const courseRes = await pool.query(courseSql, courseValues);
+			courseId = courseRes.rows[0].id;
+		}
 		for (const offering of course.offerings) {
 			const offeringSql = 'INSERT INTO offering(course_id) VALUES($1) RETURNING id';
-			const offeringRes = await pool.query(offeringSql, [courseRes.rows[0].id]);
+			const offeringRes = await pool.query(offeringSql, [courseId]);
 			for (const sectionType of offering) {
 				const sectionTypeSql = 'INSERT INTO section_type(offering_id, name) VALUES($1, $2) RETURNING id';
 				const sectionTypeValues = [offeringRes.rows[0].id, sectionType.name];
@@ -35,6 +49,20 @@ export default class CourseServices {
 		`);
 
 		return res.rows;
+	}
+	
+	static async getCourseInfo(id: number): Promise<CourseInfo> {
+		const res = await pool.query(`
+		SELECT JSONB_BUILD_OBJECT(
+			'title', title,
+			'code', code,
+			'updated_at', updated_at) AS data
+		FROM course
+		WHERE id = $1
+		`, [id]);
+		const timestamp: Date = new Date(res.rows[0].data.updated_at);
+		res.rows[0].data.updated_at = timestamp;
+		return res.rows[0].data;
 	}
 
 	static async getCourse(id: number): Promise<Course> {

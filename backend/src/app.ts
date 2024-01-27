@@ -8,9 +8,11 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-import router from "./routes/v1/courses.js";
+import courseRouter from "./routes/v1/courses.js";
+import scheduleRouter from "./routes/v1/schedules.js";
 
-app.use(router);
+app.use('/v1/courses', courseRouter);
+app.use('/v1/schedules', scheduleRouter);
 
 app.listen(process.env.PORT, () => {
 	console.log(`Server is running on port ${process.env.PORT}`);

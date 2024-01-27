@@ -1,8 +1,9 @@
 import { Router, Request, Response } from "express";
 import CourseController from "../../controllers/courseController.js";
 
-const router = Router();
+const courseRouter = Router();
 
-router.get('/courses', CourseController.getCourses);
+courseRouter.get('/', CourseController.getCourses);
+courseRouter.get('/:id', CourseController.getCourse);
 
-export default router;
+export default courseRouter;

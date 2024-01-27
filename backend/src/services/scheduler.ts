@@ -14,7 +14,7 @@ interface SchedulerWeights {
     timeDispersionPenalty?: number
 }
 
-class Scheduler {
+export class Scheduler {
     public static defaultWeights: SchedulerWeights = {
         overlapPenalty: -1000, // Filter schedule defects
 
