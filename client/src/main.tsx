@@ -2,17 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
-import Scheduler from './pages/Scheduler';
+import ScheduleForm from './pages/ScheduleForm';
+import ScheduleTool from './pages/ScheduleTool';
 
 const router = createBrowserRouter([
 	{
 		path: '/',
 		index: true,
-		element: <Navigate to='schedule'></Navigate>
+		element: <Navigate to='schedule/form'></Navigate>
 	},
 	{
-		path: 'schedule',
-		element: <Scheduler />,
+		path: 'schedule/form',
+		element: <ScheduleForm />,
+	},
+	{
+		path: 'schedule/tool',
+		element: <ScheduleTool />,
 	}
 ]);
 
