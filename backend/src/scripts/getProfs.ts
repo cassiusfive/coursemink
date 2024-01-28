@@ -1,0 +1,16 @@
+import scraper from "../services/scraper.js";
+import ProfServices from "../services/profServices.js";
+
+try {
+    const profs = await scraper.scrapeProfessors();
+    await Promise.allSettled(
+        profs.map((prof) => {
+            return ProfServices.insertProf(prof);
+        })
+    );
+    console.log("finished");
+} catch (e) {
+    if (e instanceof Error) {
+        console.log(e.message);
+    }
+}
