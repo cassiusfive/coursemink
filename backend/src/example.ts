@@ -10,9 +10,9 @@ try {
     const courses = await Promise.all(
         courseIds.map((id) => CourseServices.getCourse(id))
     );
-    console.time("Find Optimal Schedule");
-    Scheduler.findSchedules(courses);
-    console.timeEnd("Find Optimal Schedule");
+    console.log(courses);
+    const schedules = Scheduler.findSchedules(courses);
+    console.log(schedules[0]);
 } catch (e) {
     if (e instanceof Error) {
         console.error(e);

@@ -1,7 +1,6 @@
 import pool from "../utils/database.js";
 import scraper from "./scraper.js";
-import { Course } from "../shared.types.js";
-import { parse } from "date-fns";
+import { Course, Timestamp } from "../shared.types.js";
 
 interface CourseInfo {
     id: number;
@@ -52,8 +51,8 @@ export default class CourseServices {
                     );
                     const sectionSql =
                         'INSERT INTO section(section_type_id, crn, credits, "maxEnrollment", professor_id, enrollment, "start", "end", "onMonday", "onTuesday", "onWednesday", "onThursday", "onFriday") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)';
-                    const startTime = `${section.start.getHours()}:${section.start.getMinutes()}`;
-                    const endTime = `${section.end.getHours()}:${section.end.getMinutes()}`;
+                    const startTime = `${section.start.hours}:${section.start.minutes}`;
+                    const endTime = `${section.end.hours}:${section.end.minutes}`;
                     const sectionValues = [
                         sectionTypeRes.rows[0].id,
                         section.crn,
@@ -159,15 +158,17 @@ export default class CourseServices {
         res.rows[0].data.offerings.map((offering: any) => {
             offering.map((sectionType: any) => {
                 sectionType.sections.map((section: any) => {
-                    section.start = parse(
-                        section.start,
-                        "HH:mm:ss",
-                        new Date(0)
-                    );
-                    section.end = parse(section.end, "HH:mm:ss", new Date(0));
+                    section.start = this.parseStamp(section.start);
+                    section.end = this.parseStamp(section.end);
                 });
             });
         });
+        res.rows[0].data["id"] = id;
         return res.rows[0].data;
+    }
+
+    private static parseStamp(time: string): Timestamp {
+        const [hours, minutes, seconds] = time.split(":");
+        return { hours: +hours, minutes: +minutes };
     }
 }

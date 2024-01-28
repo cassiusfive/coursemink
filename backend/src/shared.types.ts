@@ -21,8 +21,8 @@ export interface Section {
     instructorAvgRating?: number;
     instructorAvgDifficulty?: number;
     instructorRatings?: number;
-    start: Date;
-    end: Date;
+    start: Timestamp;
+    end: Timestamp;
     onMonday: boolean;
     onTuesday: boolean;
     onWednesday: boolean;
@@ -30,9 +30,14 @@ export interface Section {
     onFriday: boolean;
 }
 
+export interface Timestamp {
+    hours: number;
+    minutes: number;
+}
+
 export interface TimeRange {
-    start: Date;
-    end: Date;
+    start: Timestamp;
+    end: Timestamp;
 }
 
 export interface Professor {

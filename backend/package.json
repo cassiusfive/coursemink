@@ -15,10 +15,8 @@
   "dependencies": {
     "axios": "^1.6.2",
     "cors": "^2.8.5",
-    "date-fns": "^3.0.6",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "max-priority-queue-typed": "^1.51.9",
     "pg": "^8.11.3"
   },
   "devDependencies": {

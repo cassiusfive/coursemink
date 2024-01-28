@@ -1,16 +1,25 @@
-import { Course, Offering, Section, TimeRange } from "../shared.types";
-import { MaxPriorityQueue, Comparator } from "max-priority-queue-typed";
+import {
+    Course,
+    Offering,
+    Section,
+    TimeRange,
+    Timestamp,
+} from "../shared.types";
 
 type SectionEvent = {
+    crn: number;
     courseId: number;
     courseCode: string;
     courseTitle: string;
+    type: string;
+    professor: string;
+    professorAvgRating: number;
     timerange: string;
     start: number;
     length: number;
 };
 
-type Schedule = {
+type Schedule = Fitness & {
     monday: SectionEvent[];
     tuesday: SectionEvent[];
     wednesday: SectionEvent[];
@@ -18,29 +27,40 @@ type Schedule = {
     friday: SectionEvent[];
 };
 
-interface SchedulerWeights {
+type SchedulerWeights = {
     // Hard constraints
     overlapPenalty: number;
 
     // Soft constraints
-    preferredStartTime: Date;
-    preferredEndTime: Date;
+    preferredStartTime: Timestamp;
+    preferredEndTime: Timestamp;
     timePreferencePenalty: number;
     timeCohesionPenalty: number;
     timeDispersionPenalty: number;
     teacherRatingWeight: number;
-}
+};
+
+type Fitness = {
+    professorScore: number;
+    overlapPenalty: number;
+    timePreferencePenalty: number;
+};
+
+type ScoredSections = Fitness & {
+    sections: Section[];
+};
 
 export class Scheduler {
     public static defaultWeights: SchedulerWeights = {
-        overlapPenalty: -1000, // Filter schedule defects
+        overlapPenalty: -500, // Filter schedule defects
 
-        preferredStartTime: new Date(0), // 12:00am
-        preferredEndTime: new Date(86400000), // 12:00pm
+        preferredStartTime: { hours: 10, minutes: 0 }, // 10:00am
+        preferredEndTime: { hours: 14, minutes: 0 }, // 4:00pm
         timePreferencePenalty: -50,
 
-        timeCohesionPenalty: -0.1, // Minimize time between first and last class (per minute delta)
+        timeCohesionPenalty: 0, // Minimize time between first and last class (per minute delta)
         timeDispersionPenalty: 0, // Minimize differences in class time (per minute delta)
+
         teacherRatingWeight: 10,
     };
 
@@ -49,76 +69,152 @@ export class Scheduler {
         options?: Partial<SchedulerWeights>
     ): Schedule[] {
         const config = { ...this.defaultWeights, ...(options || {}) };
-
-        const comparator: Comparator<Section[]> = (a, b) => {
-            return (
-                this.evaluateFitness(a, config) -
-                this.evaluateFitness(b, config)
-            );
-        };
-        const queue = new MaxPriorityQueue<Section[]>([], {
-            comparator: comparator,
-        });
+        const queue: ScoredSections[] = [];
 
         for (const possibleSchedule of this.generateCourseSections(catalog)) {
-            queue.add(possibleSchedule);
+            queue.push({
+                sections: possibleSchedule,
+                ...this.evaluateFitness(possibleSchedule, config),
+            });
         }
-        console.log(queue.size);
-        return [];
-    }
 
-    private static overrideDefaults(
-        config: SchedulerWeights
-    ): SchedulerWeights {
-        return Object.assign({}, this.defaultWeights, config);
+        const crnToEvent: Record<string, SectionEvent> = {};
+        catalog.forEach((course) => {
+            course.offerings.forEach((offering) => {
+                offering.forEach((sectionType) => {
+                    sectionType.sections.forEach((section) => {
+                        crnToEvent[section.crn] = {
+                            crn: section.crn,
+                            courseId: course.id,
+                            courseCode: course.code,
+                            courseTitle: course.title,
+                            type: sectionType.name,
+                            timerange: this.stampsToRange(
+                                section.start,
+                                section.end
+                            ),
+                            start: section.start.hours,
+                            length:
+                                (this.stampValue(section.end) -
+                                    this.stampValue(section.start)) /
+                                60,
+                            professor: section.instructorName || "Staff",
+                            professorAvgRating:
+                                section.instructorAvgRating || 2.5,
+                        };
+                    });
+                });
+            });
+        });
+
+        const schedules = queue
+            .sort((a, b) => {
+                return (
+                    b.professorScore +
+                    b.overlapPenalty +
+                    b.timePreferencePenalty -
+                    (a.professorScore +
+                        a.overlapPenalty +
+                        a.timePreferencePenalty)
+                );
+            })
+            .slice(0, 200)
+            .map((scoredSections) => {
+                const schedule: Schedule = {
+                    monday: [],
+                    tuesday: [],
+                    wednesday: [],
+                    thursday: [],
+                    friday: [],
+                    ...scoredSections,
+                };
+                scoredSections.sections.forEach((section) => {
+                    if (section.onMonday)
+                        schedule.monday.push(crnToEvent[section.crn]);
+                    if (section.onTuesday)
+                        schedule.tuesday.push(crnToEvent[section.crn]);
+                    if (section.onWednesday)
+                        schedule.wednesday.push(crnToEvent[section.crn]);
+                    if (section.onThursday)
+                        schedule.thursday.push(crnToEvent[section.crn]);
+                    if (section.onFriday)
+                        schedule.friday.push(crnToEvent[section.crn]);
+                });
+                return schedule;
+            });
+
+        return schedules;
     }
 
     private static evaluateFitness(
         schedule: Section[],
         config: SchedulerWeights
-    ): number {
-        let fitness = 0;
-        let mondaySchedule: TimeRange[] = [];
-        let tuesdaySchedule: TimeRange[] = [];
-        let wednesdaySchedule: TimeRange[] = [];
-        let thursdaySchedule: TimeRange[] = [];
-        let fridaySchedule: TimeRange[] = [];
+    ): Fitness {
+        let fitness: Fitness = {
+            professorScore: 0,
+            overlapPenalty: 0,
+            timePreferencePenalty: 0,
+        };
+
+        let daySchedules: TimeRange[][] = [[], [], [], [], []];
 
         const sectionMemo: Record<string, number> = {};
         for (const section of schedule) {
             if (sectionMemo[section.crn]) {
-                fitness += sectionMemo[section.crn];
+                fitness.professorScore += sectionMemo[section.crn];
             } else {
                 const sectionFitness = this.sectionFitness(section, config);
                 sectionMemo[section.crn] = sectionFitness;
-                fitness += sectionFitness;
+                fitness.professorScore += sectionFitness;
             }
             const timeRange: TimeRange = {
                 start: section.start,
                 end: section.end,
             };
             if (section.onMonday) {
-                mondaySchedule.push(timeRange);
+                daySchedules[0].push(timeRange);
             }
             if (section.onTuesday) {
-                tuesdaySchedule.push(timeRange);
+                daySchedules[1].push(timeRange);
             }
             if (section.onWednesday) {
-                wednesdaySchedule.push(timeRange);
+                daySchedules[2].push(timeRange);
             }
             if (section.onThursday) {
-                thursdaySchedule.push(timeRange);
+                daySchedules[3].push(timeRange);
             }
             if (section.onFriday) {
-                fridaySchedule.push(timeRange);
+                daySchedules[4].push(timeRange);
             }
         }
 
-        fitness += this.dayFitness(mondaySchedule, config);
-        fitness += this.dayFitness(tuesdaySchedule, config);
-        fitness += this.dayFitness(wednesdaySchedule, config);
-        fitness += this.dayFitness(thursdaySchedule, config);
-        fitness += this.dayFitness(fridaySchedule, config);
+        fitness.overlapPenalty =
+            this.dayFitness(daySchedules[0]) +
+            this.dayFitness(daySchedules[1]) +
+            this.dayFitness(daySchedules[2]) +
+            this.dayFitness(daySchedules[3]) +
+            this.dayFitness(daySchedules[4]);
+
+        for (const daySchedule of daySchedules) {
+            daySchedule.push({
+                start: { hours: 0, minutes: 0 },
+                end: config.preferredStartTime,
+            });
+            daySchedule.push({
+                start: config.preferredEndTime,
+                end: { hours: 24, minutes: 0 },
+            });
+        }
+
+        fitness.timePreferencePenalty =
+            this.dayFitness(daySchedules[0]) +
+            this.dayFitness(daySchedules[1]) +
+            this.dayFitness(daySchedules[2]) +
+            this.dayFitness(daySchedules[3]) +
+            this.dayFitness(daySchedules[4]);
+
+        fitness.overlapPenalty *= config.overlapPenalty;
+        fitness.timePreferencePenalty *= config.timePreferencePenalty;
 
         return fitness;
     }
@@ -137,45 +233,33 @@ export class Scheduler {
         return fitness;
     }
 
-    private static dayFitness(
-        daySchedule: TimeRange[],
-        config: SchedulerWeights
-    ): number {
+    private static dayFitness(daySchedule: TimeRange[]): number {
         let fitness = 0;
-        let startOfDay = Infinity;
-        let endOfDay = -Infinity;
-        for (const timeRange of daySchedule) {
-            startOfDay = Math.min(startOfDay, timeRange.start.getTime());
-            endOfDay = Math.max(endOfDay, timeRange.end.getTime());
-        }
         if (this.timeConflict(daySchedule)) {
-            fitness += config.overlapPenalty!;
+            fitness += 1;
         }
-        daySchedule.push({
-            start: new Date(0),
-            end: config.preferredStartTime!,
-        });
-        daySchedule.push({
-            start: config.preferredEndTime!,
-            end: new Date(86400000),
-        });
-        if (this.timeConflict(daySchedule)) {
-            fitness += config.timePreferencePenalty!;
-        }
-        fitness += (endOfDay - startOfDay) * config.timeCohesionPenalty!;
         return fitness;
     }
 
     private static timeConflict(daySchedule: TimeRange[]): boolean {
-        daySchedule.sort((a, b) => a.start.getTime() - b.end.getTime());
+        daySchedule.sort(
+            (a, b) => this.stampValue(a.start) - this.stampValue(b.end)
+        );
         for (let i = 1; i < daySchedule.length; i++) {
             const a = daySchedule[i - 1];
             const b = daySchedule[i];
-            if (a.start < b.end && b.start < a.end) {
+            if (
+                this.stampValue(a.start) < this.stampValue(b.end) &&
+                this.stampValue(b.start) < this.stampValue(a.end)
+            ) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static stampValue(timestamp: Timestamp) {
+        return timestamp.hours * 60 + timestamp.minutes;
     }
 
     public static *generateCourseSections(
@@ -212,5 +296,17 @@ export class Scheduler {
                 ]);
             }
         }
+    }
+
+    private static stampsToRange(start: Timestamp, end: Timestamp) {
+        const startStr = `${start.hours
+            .toString()
+            .padStart(2, "0")}:${start.minutes.toString().padStart(2, "0")}${
+            start.hours < 12 ? "am" : "pm"
+        }`;
+        const endStr = `${end.hours.toString().padStart(2, "0")}:${end.minutes
+            .toString()
+            .padStart(2, "0")}${end.hours < 12 ? "am" : "pm"}`;
+        return startStr + "-" + endStr;
     }
 }

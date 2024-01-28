@@ -5,8 +5,8 @@ import {
     SectionType,
     Section,
     Professor,
+    Timestamp,
 } from "../shared.types";
-import { parse } from "date-fns";
 
 class RegistrationScraper {
     private axiosInstance = axios.create({
@@ -245,7 +245,11 @@ class RegistrationScraper {
             }
         );
 
-        return this.normalizeCourseData(courseSearch.data.data);
+        return this.normalizeCourseData(
+            courseSearch.data.data.filter((rawSection: any) => {
+                return rawSection.courseTitle === title;
+            })
+        );
     }
 
     private normalizeCourseData(data: any): Partial<Course> {
@@ -300,15 +304,11 @@ class RegistrationScraper {
                         (faculty: any) => faculty.primaryIndicator
                     )?.displayName || "staff"
                 ),
-                start: parse(
-                    section.meetingsFaculty[0].meetingTime.beginTime,
-                    "HHmm",
-                    new Date(0)
+                start: this.parseTime(
+                    section.meetingsFaculty[0].meetingTime.beginTime
                 ),
-                end: parse(
-                    section.meetingsFaculty[0].meetingTime.endTime,
-                    "HHmm",
-                    new Date(0)
+                end: this.parseTime(
+                    section.meetingsFaculty[0].meetingTime.endTime
                 ),
                 onMonday: section.meetingsFaculty[0].meetingTime.monday,
                 onTuesday: section.meetingsFaculty[0].meetingTime.tuesday,
@@ -332,6 +332,14 @@ class RegistrationScraper {
         }
 
         return course;
+    }
+
+    private parseTime(time: string): Timestamp {
+        if (time.length != 4) return { hours: 0, minutes: 0 };
+        return {
+            hours: +time.slice(0, 2),
+            minutes: +time.slice(2, 4),
+        };
     }
 
     private normalizeName(name: string) {
