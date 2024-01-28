@@ -9,24 +9,11 @@ export default class ScheduleController {
             const courseIds: number[] = req.body.courses;
             const courses = await Promise.all(
                 courseIds.map(async (id) => {
-                    const courseInfo = await CourseServices.getCourseInfo(id);
-                    const now = new Date();
-                    // 1 hour
-                    if (
-                        now.getTime() - courseInfo.updated_at.getTime() >
-                        3600000
-                    ) {
-                        const course = await scraper.scrapeCourse(
-                            courseInfo.title
-                        );
-                        await CourseServices.insertCourse(course, id);
-                        return course;
-                    }
-                    return await CourseServices.getCourse(id);
+                    return CourseServices.getCourse(id);
                 })
             );
-            const schedule = Scheduler.findOptimal(courses);
-            console.log(schedule);
+            const schedules = Scheduler.findSchedules(courses);
+            console.log(schedules);
             res.status(200).json();
         } catch (error) {
             console.log(error);

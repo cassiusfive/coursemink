@@ -1,7 +1,5 @@
-export type CourseCatalog = Course[];
-
 export interface Course {
-    id?: number;
+    id: number;
     title: string;
     code: string;
     offerings: Offering[];
@@ -19,8 +17,10 @@ export interface Section {
     credits: number;
     maxEnrollment: number;
     enrollment: number;
-    instructorName: string;
-    instructorEmail: string;
+    instructorName?: string;
+    instructorAvgRating?: number;
+    instructorAvgDifficulty?: number;
+    instructorRatings?: number;
     start: Date;
     end: Date;
     onMonday: boolean;

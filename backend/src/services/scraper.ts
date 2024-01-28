@@ -1,5 +1,11 @@
 import axios from "axios";
-import { Course, Offering, Section, Professor } from "../shared.types";
+import {
+    Course,
+    Offering,
+    SectionType,
+    Section,
+    Professor,
+} from "../shared.types";
 import { parse } from "date-fns";
 
 class RegistrationScraper {
@@ -151,11 +157,11 @@ class RegistrationScraper {
         return profs;
     }
 
-    public async scrapeEmptyCourses(): Promise<Course[]> {
+    public async scrapeEmptyCourses(): Promise<Partial<Course>[]> {
         const cookies = await this.setTerm(202402);
 
         let set: Set<String> = new Set();
-        let courseList: Course[] = [];
+        let courseList: Partial<Course>[] = [];
 
         const initialSearch = await this.axiosInstance.get(
             "searchResults/searchResults",
@@ -176,15 +182,15 @@ class RegistrationScraper {
         const totalCourses: number = initialSearch.data.totalCount;
 
         initialSearch.data.data.forEach((courseData: any) => {
-            const course: Course = {
+            const course: Partial<Course> = {
                 title: courseData.courseTitle,
                 code: courseData.subjectCourse,
                 offerings: [],
             };
-            if (!set.has(course.code + course.title)) {
+            if (!set.has(course.code! + course.title!)) {
                 courseList.push(course);
             }
-            set.add(course.code + course.title);
+            set.add(course.code! + course.title!);
         });
 
         while (coursesSearched < totalCourses) {
@@ -205,22 +211,22 @@ class RegistrationScraper {
             coursesSearched += 500;
 
             search.data.data.forEach((courseData: any) => {
-                const course: Course = {
+                const course: Partial<Course> = {
                     title: courseData.courseTitle,
                     code: courseData.subjectCourse,
                     offerings: [],
                 };
-                if (!set.has(course.code + course.title)) {
+                if (!set.has(course.code || "" + course.title || "")) {
                     courseList.push(course);
                 }
-                set.add(course.code + course.title);
+                set.add(course.code! + course.title!);
             });
         }
 
         return courseList;
     }
 
-    public async scrapeCourse(title: string): Promise<Course> {
+    public async scrapeCourse(title: string): Promise<Partial<Course>> {
         const cookies = await this.setTerm(202402);
 
         const courseSearch = await this.axiosInstance.get(
@@ -242,7 +248,7 @@ class RegistrationScraper {
         return this.normalizeCourseData(courseSearch.data.data);
     }
 
-    private normalizeCourseData(data: any): Course {
+    private normalizeCourseData(data: any): Partial<Course> {
         if (!data) {
             throw new Error("No data provided");
         }
@@ -268,7 +274,7 @@ class RegistrationScraper {
             throw new Error("Course data not normalized");
         }
 
-        const course: Course = {
+        const course: Partial<Course> = {
             title: data[0].courseTitle,
             code: data[0].subject + data[0].courseNumber,
             offerings: [],
@@ -290,9 +296,10 @@ class RegistrationScraper {
                 maxEnrollment: section.maximumEnrollment,
                 enrollment: section.enrollment,
                 instructorName: this.normalizeName(
-                    section.faculty[0].displayName
+                    section.faculty.find(
+                        (faculty: any) => faculty.primaryIndicator
+                    )?.displayName || "staff"
                 ),
-                instructorEmail: section.faculty[0].emailAddress,
                 start: parse(
                     section.meetingsFaculty[0].meetingTime.beginTime,
                     "HHmm",
@@ -312,14 +319,16 @@ class RegistrationScraper {
         }
 
         for (const linker in linkedGroups) {
-            const offering: Offering = [];
+            const offering: SectionType[] = [];
             for (const type in linkedGroups[linker]) {
                 offering.push({
                     name: type,
                     sections: linkedGroups[linker][type],
                 });
             }
-            course.offerings.push(offering);
+            if (course.offerings) {
+                course.offerings.push(offering);
+            }
         }
 
         return course;

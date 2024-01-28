@@ -6,24 +6,10 @@ export default class CourseController {
     static async getCourse(req: Request, res: Response): Promise<void> {
         try {
             const id: number = +req.params.id;
-            const courseInfo = await CourseServices.getCourseInfo(id);
-            const now = new Date();
-            // 3600000 = 1 hour
-            const updateThreshold = 3600000;
-            if (
-                now.getTime() - courseInfo.updated_at.getTime() >
-                updateThreshold
-            ) {
-                const course = await scraper.scrapeCourse(courseInfo.title);
-                res.status(200).json(course);
-                await CourseServices.insertCourse(course, id);
-                return;
-            }
             const course = await CourseServices.getCourse(id);
             res.status(200).json(course);
         } catch (error) {
-            console.log(error);
-            res.status(500).json({ error: "Scrape failed" });
+            res.status(500).json({ error: "Course doesn't meet standards" });
         }
     }
 
