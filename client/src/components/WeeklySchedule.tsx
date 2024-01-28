@@ -22,7 +22,7 @@ type WeeklyScheduleProps = {
 };
 
 const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
-    const startHour = 9;
+    const startHour = 8;
     const endHour = 20;
 
     const [rowHeight, setRowHeight] = useState<number>(0);

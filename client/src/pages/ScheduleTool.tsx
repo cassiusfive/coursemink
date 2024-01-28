@@ -110,7 +110,7 @@ const ScheduleTool = () => {
                 </div>
                 <div className="grow px-10 flex flex-col justify-center">
                     Time Preference Penalty:{" "}
-                    <b>{schedules[scheduleIndex].professorScore || 0}</b>
+                    <b>{schedules[scheduleIndex].timePreferencePenalty || 0}</b>
                 </div>
                 <button
                     className="bg-slate-500 hover:bg-slate-700 text-white my-4 mx-4 rounded-md min-w-12"
