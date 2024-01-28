@@ -226,8 +226,15 @@ class RegistrationScraper {
         return courseList;
     }
 
-    public async scrapeCourse(title: string): Promise<Partial<Course>> {
+    public async scrapeCourse(
+        code: string,
+        title: string
+    ): Promise<Partial<Course>> {
         const cookies = await this.setTerm(202402);
+
+        const [subjectCode, courseNumber] = code
+            .split(/([a-zA-Z]+)([0-9]+.+)/)
+            .filter(Boolean);
 
         const courseSearch = await this.axiosInstance.get(
             "searchResults/searchResults",
@@ -235,7 +242,8 @@ class RegistrationScraper {
                 params: {
                     txt_campus: "C",
                     txt_term: 202402,
-                    txt_courseTitle: title,
+                    txt_subject: subjectCode,
+                    txt_courseNumber: courseNumber,
                     pageOffset: 0,
                     pageMaxSize: 500,
                 },
@@ -256,12 +264,16 @@ class RegistrationScraper {
         if (!data) {
             throw new Error("No data provided");
         }
+
+        console.log(data);
+
         data = data.filter((rawSection: any) => {
             const excludedAttributes = ["HNRS"];
-            if (rawSection?.faculty.length != 1) {
+            const excludedTypes = ["Examination for Credit"];
+            if (rawSection?.faculty.length < 1) {
                 return false;
             }
-            if (rawSection?.meetingsFaculty.length != 1) {
+            if (rawSection?.meetingsFaculty.length < 1) {
                 return false;
             }
             if (
@@ -275,7 +287,7 @@ class RegistrationScraper {
         });
 
         if (data.length == 0) {
-            throw new Error("Course data not normalized");
+            throw new Error("Course has no valid offerings");
         }
 
         const course: Partial<Course> = {

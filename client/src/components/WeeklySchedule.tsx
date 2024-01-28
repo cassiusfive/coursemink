@@ -64,7 +64,7 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                         return (
                             <div
                                 key={i}
-                                className="w-full h-full border-b box-border flex-grow basis-0"
+                                className="w-full h-full border-b box-border flex-grow basis-0 min-h-16"
                             >
                                 {section && (
                                     <div
@@ -77,16 +77,20 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                                         }}
                                     >
                                         <div className="flex flex-col justify-between grow">
-                                            <div className="px-2">
-                                                {section.courseCode.toUpperCase()}
+                                            <div className="flex justify-between">
+                                                <div className="px-2">
+                                                    <b>
+                                                        {section.courseCode.toUpperCase()}
+                                                    </b>
+                                                </div>
+                                                <div className="px-2 pb-1 text-right">
+                                                    {section.type.toUpperCase()}
+                                                </div>
                                             </div>
-                                            <div className="px-2 text-left text-nowrap">
-                                                <b>{section!.professor}</b>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="px-2 pb-1 text-right">
-                                                {section.type.toUpperCase()}
+                                            <div>
+                                                <div className="px-2 text-left text-nowrap">
+                                                    {section.professor}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

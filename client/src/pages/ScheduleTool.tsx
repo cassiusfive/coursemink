@@ -99,7 +99,7 @@ const ScheduleTool = () => {
 
     return (
         <>
-            <div className="flex justify-center">
+            <div className="flex justify-center py-5 px-5">
                 <div className="grow px-10 flex flex-col justify-center">
                     Prof. Score:{" "}
                     <b>{schedules[scheduleIndex].professorScore || 0}</b>
@@ -128,7 +128,7 @@ const ScheduleTool = () => {
                     {">"}
                 </button>
             </div>
-            <div className="px-10 flex justify-center h-[calc(80vh-2rem)]">
+            <div className="px-10 flex justify-center">
                 <WeeklySchedule
                     colors={colors}
                     schedule={schedules[scheduleIndex]}
