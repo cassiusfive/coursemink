@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Schedule, SectionEvent } from "../pages/ScheduleTool";
 
 type TimeLabelProps = {
     time: number;
@@ -17,46 +18,23 @@ const TimeLabel = ({ time }: TimeLabelProps) => {
 
 type WeeklyScheduleProps = {
     colors: Record<number, string>;
+    schedule: Schedule;
 };
 
-const WeeklySchedule = ({ colors }: WeeklyScheduleProps) => {
-    const startHour = 8;
-    const endHour = 16;
+const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
+    const startHour = 9;
+    const endHour = 20;
 
-    const INITIAL_DATA: any = {
-        monday: [
-            {
-                course_id: 1448,
-                code: "MTH254",
-                section: "005",
-                timerange: "2:00pm-2:50pm",
-                start: 14,
-                length: 5 / 6,
-                type: "Lecture",
-                professor: "Chris Orum",
-            },
-            {
-                course_id: 808,
-                code: "ENGR102",
-                section: "010",
-                timerange: "1:00pm-1:50pm",
-                start: 13,
-                length: 5 / 6,
-                type: "Lecture",
-                professor: "Jason Clark",
-            },
-        ],
-    };
-
-    const [schedule, setSchedule] = useState<any>(INITIAL_DATA);
     const [rowHeight, setRowHeight] = useState<number>(0);
-    const rowRef = useRef<HTMLDivElement>(null);
+    const ulRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleResize = () => {
-            if (rowRef.current) {
-                if (Math.abs(rowRef.current.clientHeight - rowHeight) > 1) {
-                    setRowHeight(rowRef.current.clientHeight);
+            if (ulRef.current) {
+                if (Math.abs(ulRef.current.clientHeight - rowHeight) > 10) {
+                    setRowHeight(
+                        ulRef.current.clientHeight / (endHour - startHour)
+                    );
                 }
             }
         };
@@ -66,6 +44,60 @@ const WeeklySchedule = ({ colors }: WeeklyScheduleProps) => {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     });
+
+    type EventColumnProps = {
+        events: SectionEvent[];
+        colors: Record<number, string>;
+    };
+
+    const EventColumn = ({ events, colors }: EventColumnProps) => {
+        return (
+            <ul className="w-full h-full">
+                <div
+                    ref={ulRef}
+                    className="relative z-10 w-full h-full flex flex-col justify-between box-border top-0"
+                >
+                    {[...Array(endHour - startHour).keys()].map((i) => {
+                        const section = events.find((section) => {
+                            return section.start === startHour + i;
+                        });
+                        return (
+                            <div
+                                key={i}
+                                className="w-full h-full border-b box-border flex-grow basis-0"
+                            >
+                                {section && (
+                                    <div
+                                        className={
+                                            "flex rounded-md text-white absolute w-full " +
+                                            colors[section.courseId]
+                                        }
+                                        style={{
+                                            height: rowHeight * section.length,
+                                        }}
+                                    >
+                                        <div className="flex flex-col justify-between grow">
+                                            <div className="px-2">
+                                                {section.courseCode.toUpperCase()}
+                                            </div>
+                                            <div className="px-2 text-left text-nowrap">
+                                                <b>{section!.professor}</b>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="px-2 pb-1 text-right">
+                                                {section.type.toUpperCase()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </ul>
+        );
+    };
 
     return (
         <div className="w-full h-full relative">
@@ -86,65 +118,31 @@ const WeeklySchedule = ({ colors }: WeeklyScheduleProps) => {
                     <div className="text-center border-b box-border py-2">
                         Monday
                     </div>
-                    <ul className="relative w-full h-full">
-                        <div className="absolute z-10 w-full h-full flex flex-col justify-between box-border top-0">
-                            {[...Array(endHour - startHour).keys()].map((i) => {
-                                const section = schedule.monday.find(
-                                    (section: any) =>
-                                        section.start === i + startHour
-                                );
-                                return (
-                                    <div
-                                        key={i}
-                                        className="w-full h-full border-b box-border"
-                                        ref={rowRef}
-                                    >
-                                        {section && (
-                                            <div
-                                                className={
-                                                    "flex rounded-md text-white " +
-                                                    colors[section.course_id]
-                                                }
-                                                style={{
-                                                    height:
-                                                        rowHeight *
-                                                        section.length,
-                                                }}
-                                            >
-                                                <div className="flex flex-col justify-between grow">
-                                                    <div className="px-2">
-                                                        {section.code.toUpperCase()}
-                                                    </div>
-                                                    <div className="px-2 text-left text-nowrap">
-                                                        <b>
-                                                            {section.professor}
-                                                        </b>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="px-2 pb-1 text-right">
-                                                        {section.type.toUpperCase()}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </ul>
+                    <EventColumn events={schedule.monday} colors={colors} />
                 </section>
-                <section className="px-2 basis-0 grow border-r">
-                    <div className="text-center">Tuesday</div>
+                <section className="px-0 basis-0 grow border-l border-r flex flex-col">
+                    <div className="text-center border-b box-border py-2">
+                        Tuesday
+                    </div>
+                    <EventColumn events={schedule.tuesday} colors={colors} />
                 </section>
-                <section className="px-2 basis-0 grow border-r">
-                    <div className="text-center">Wednesday</div>
+                <section className="px-0 basis-0 grow border-l border-r flex flex-col">
+                    <div className="text-center border-b box-border py-2">
+                        Wednesday
+                    </div>
+                    <EventColumn events={schedule.wednesday} colors={colors} />
                 </section>
-                <section className="px-2 basis-0 grow border-r">
-                    <div className="text-center">Thursday</div>
+                <section className="px-0 basis-0 grow border-l border-r flex flex-col">
+                    <div className="text-center border-b box-border py-2">
+                        Thursday
+                    </div>
+                    <EventColumn events={schedule.thursday} colors={colors} />
                 </section>
-                <section className="px-2 basis-0 grow border-r">
-                    <div className="text-center">Friday</div>
+                <section className="px-0 basis-0 grow border-l border-r flex flex-col">
+                    <div className="text-center border-b box-border py-2">
+                        Friday
+                    </div>
+                    <EventColumn events={schedule.friday} colors={colors} />
                 </section>
             </div>
         </div>
