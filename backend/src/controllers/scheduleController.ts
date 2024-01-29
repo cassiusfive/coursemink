@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import CourseServices from "../services/courseServices.js";
 import { Scheduler } from "../services/scheduler.js";
-import scraper from "../services/scraper.js";
 
 export default class ScheduleController {
     static async createSchedule(req: Request, res: Response): Promise<void> {
