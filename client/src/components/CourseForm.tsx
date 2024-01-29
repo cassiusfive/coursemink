@@ -18,7 +18,7 @@ type DropdownProps = {
 
 const Dropdown = ({ courses, addCourse }: DropdownProps) => {
     return (
-        <div className="py-1 mt-2 w-full border border-slate-300 rounded-md">
+        <div className="mt-2 w-full rounded-md border border-slate-300 py-1">
             {courses.slice(0, 5).map((course) => (
                 <div
                     key={course.id}
@@ -27,7 +27,7 @@ const Dropdown = ({ courses, addCourse }: DropdownProps) => {
                     className="flex justify-start hover:bg-slate-100"
                 >
                     <b className="px-5">{course.code}</b>
-                    <span className="overflow-hidden text-nowrap text-ellipsis pr-5">
+                    <span className="overflow-hidden text-ellipsis text-nowrap pr-5">
                         {course.title}
                     </span>
                 </div>
@@ -88,7 +88,7 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
                 type="text"
                 value={searchQuery}
                 placeholder="Find a course"
-                className="px-5 py-3 w-full border border-slate-300 rounded-md"
+                className="w-full rounded-md border border-slate-300 px-5 py-3"
                 onChange={(e) => {
                     setSearchQuery(e.target.value);
                 }}
@@ -113,7 +113,7 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
                     return (
                         <tr
                             key={course.id}
-                            className="flex justify-between items-center py-1"
+                            className="flex items-center justify-between py-1"
                         >
                             <td className="flex">
                                 <div className="inline-block min-w-20">
@@ -124,7 +124,7 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
                             <td>
                                 <button
                                     type="button"
-                                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-md"
+                                    className="rounded-md bg-red-500 px-4 py-2 text-white hover:bg-red-700"
                                     onClick={() => removeCourse(course)}
                                 >
                                     remove

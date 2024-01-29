@@ -3,6 +3,8 @@ import { FormData } from "./ScheduleForm";
 import { useState, useEffect } from "react";
 
 import WeeklySchedule from "../components/WeeklySchedule";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faForward, faBackward } from "@fortawesome/free-solid-svg-icons";
 
 export type SectionEvent = {
     crn: number;
@@ -99,41 +101,40 @@ const ScheduleTool = () => {
 
     return (
         <>
-            <div className="flex justify-center py-5 px-5">
-                <div className="grow px-10 flex flex-col justify-center">
-                    Prof. Score:{" "}
-                    <b>{schedules[scheduleIndex].professorScore || 0}</b>
+            <div className="px-10 py-10">
+                <div className="flex justify-center">
+                    <WeeklySchedule
+                        colors={colors}
+                        schedule={schedules[scheduleIndex]}
+                    />
                 </div>
-                <div className="grow px-10 flex flex-col justify-center">
-                    Overlap Penalty:{" "}
-                    <b>{schedules[scheduleIndex].overlapPenalty || 0}</b>
-                </div>
-                <div className="grow px-10 flex flex-col justify-center">
-                    Time Preference Penalty:{" "}
-                    <b>{schedules[scheduleIndex].timePreferencePenalty || 0}</b>
-                </div>
-                <button
-                    className="bg-slate-500 hover:bg-slate-700 text-white my-4 mx-4 rounded-md min-w-12"
-                    onClick={() => back()}
-                >
-                    {"<"}
-                </button>
-                <h1 className="text-3xl font-bold text-center p-5 grow">
-                    Scheduling
-                </h1>
-                <button
-                    className="bg-slate-500 hover:bg-slate-700 text-white my-4 mx-4 rounded-md min-w-12"
-                    onClick={() => next()}
-                >
-                    {">"}
-                </button>
             </div>
-            <div className="px-10 flex justify-center">
-                <WeeklySchedule
-                    colors={colors}
-                    schedule={schedules[scheduleIndex]}
-                />
-            </div>
+            <footer className="fixed bottom-0 z-50 w-full bg-slate-500">
+                <div className="">
+                    <div className="flex min-h-20 items-stretch justify-center">
+                        <button
+                            className={
+                                "rounded-md px-12 text-white transition duration-200 hover:scale-125 active:scale-90 " +
+                                (scheduleIndex === 0 ? "collapse" : "")
+                            }
+                            onClick={() => back()}
+                        >
+                            <FontAwesomeIcon icon={faBackward} size="3x" />
+                        </button>
+                        <button
+                            className={
+                                "rounded-md px-12 text-white transition duration-200 hover:scale-125 active:scale-90 " +
+                                (scheduleIndex === schedules.length - 1
+                                    ? "collapse"
+                                    : "")
+                            }
+                            onClick={() => next()}
+                        >
+                            <FontAwesomeIcon icon={faForward} size="3x" />
+                        </button>
+                    </div>
+                </div>
+            </footer>
         </>
     );
 };

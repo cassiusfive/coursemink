@@ -43,11 +43,11 @@ const ScheduleForm = () => {
     return (
         <form onSubmit={onSubmit}>
             {step}
-            <div className="flex px-10 justify-between">
+            <div className="flex justify-between px-10">
                 {!isFirstStep && (
                     <button
                         type="button"
-                        className="bg-slate-500 hover:bg-slate-700 text-white py-2 px-4 rounded-md"
+                        className="rounded-md bg-slate-500 px-4 py-2 text-white hover:bg-slate-700"
                         onClick={back}
                     >
                         back
@@ -56,7 +56,7 @@ const ScheduleForm = () => {
                 <div />
                 <button
                     type="submit"
-                    className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
+                    className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-700"
                 >
                     {isLastStep ? "submit" : "continue"}
                 </button>
