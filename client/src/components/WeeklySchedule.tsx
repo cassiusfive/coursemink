@@ -10,8 +10,8 @@ const TimeLabel = ({ time }: TimeLabelProps) => {
     return (
         <div className="relative top-[-0.75rem] text-nowrap px-2 text-right">
             {time === 12
-                ? "NOON"
-                : (time <= 12 ? time : time - 12).toString() + ":00 " + period}
+                ? "Noon"
+                : (time <= 12 ? time : time - 12).toString() + " " + period}
         </div>
     );
 };
@@ -23,7 +23,7 @@ type WeeklyScheduleProps = {
 
 const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
     const startHour = 8;
-    const endHour = 20;
+    const endHour = 22;
 
     const [rowHeight, setRowHeight] = useState<number>(0);
     const ulRef = useRef<HTMLDivElement>(null);
@@ -107,7 +107,9 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
         <div className="relative h-full w-full">
             <div className="flex h-full w-full justify-between">
                 <section className="flex basis-0 flex-col px-0">
-                    <div className="box-border py-2 text-center">&nbsp;</div>
+                    <div className="box-border py-2 pr-2  text-center">
+                        &nbsp;
+                    </div>
                     <ul className="relative flex h-full w-full flex-col">
                         {[...Array(endHour - startHour).keys()].map((i) => {
                             return (

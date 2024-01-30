@@ -41,7 +41,10 @@ const ScheduleForm = () => {
     }
 
     return (
-        <form onSubmit={onSubmit}>
+        <form
+            onSubmit={onSubmit}
+            className="mx-auto flex h-svh w-5/6 flex-col justify-center"
+        >
             {step}
             <div className="flex justify-between px-10">
                 {!isFirstStep && (
