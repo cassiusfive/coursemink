@@ -117,9 +117,12 @@ const ScheduleTool = () => {
             <footer className="fixed bottom-0 z-50 flex w-full justify-between bg-neutral-800 align-middle">
                 <div className="mx-24 grid grow grid-cols-[min-content_1fr] items-center justify-between gap-y-2 py-3 text-xl text-white">
                     <FontAwesomeIcon icon={faChalkboardTeacher} size="lg" />
-                    <div className="ml-4 h-4 w-[10%] grow rounded-sm bg-green-300"></div>
+                    <div
+                        className="ml-4 h-4 grow rounded-sm bg-green-300 transition-[width] duration-150"
+                        style={{ width: `${scheduleIndex * 50}%` }}
+                    ></div>
                     <FontAwesomeIcon icon={faClock} size="lg" />
-                    <div className="ml-4 h-4 w-1/2 grow rounded-sm bg-blue-300"></div>
+                    <div className="ml-4 h-4 grow rounded-sm bg-blue-300"></div>
                 </div>
                 <div className="flex min-h-20 items-stretch justify-center">
                     <button

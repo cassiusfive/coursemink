@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Schedule, SectionEvent } from "../pages/ScheduleTool";
 
 type TimeLabelProps = {
@@ -26,24 +26,6 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
     const endHour = 22;
 
     const [rowHeight, setRowHeight] = useState<number>(0);
-    const ulRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleResize = () => {
-            if (ulRef.current) {
-                if (Math.abs(ulRef.current.clientHeight - rowHeight) > 10) {
-                    setRowHeight(
-                        ulRef.current.clientHeight / (endHour - startHour)
-                    );
-                }
-            }
-        };
-
-        handleResize();
-
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    });
 
     type EventColumnProps = {
         events: SectionEvent[];
@@ -53,10 +35,7 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
     const EventColumn = ({ events, colors }: EventColumnProps) => {
         return (
             <ul className="h-full w-full">
-                <div
-                    ref={ulRef}
-                    className="relative top-0 z-10 box-border flex h-full w-full flex-col justify-between"
-                >
+                <div className="relative top-0 z-10 box-border flex h-full w-full flex-col justify-between">
                     {[...Array(endHour - startHour).keys()].map((i) => {
                         const section = events.find((section) => {
                             return section.start === startHour + i;
@@ -64,7 +43,7 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                         return (
                             <div
                                 key={i}
-                                className="box-border h-full min-h-16 w-full flex-grow basis-0 border-b"
+                                className="relative box-border h-full min-h-16 w-full flex-grow basis-0 border-b"
                             >
                                 {section && (
                                     <div
@@ -73,7 +52,7 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                                             colors[section.courseId]
                                         }
                                         style={{
-                                            height: rowHeight * section.length,
+                                            height: `${section.length * 100}%`,
                                         }}
                                     >
                                         <div className="flex h-full w-full grow flex-col justify-between overflow-clip">
