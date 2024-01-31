@@ -67,7 +67,7 @@ Then type “o” into the shell running Vite to open the site running locally i
 -   [ ] View detailed course info
 -   [ ] Favorite schedules
 -   [ ] Scheduling Algorithm Overhaul
-    -   [ ] Fitness Function redefinition ( same start hour, day off )
+    -   [ ] Fitness Function redefinition
     -   [ ] Meta-heuristic local search
 -   [ ] Mobile responsiveness
 
