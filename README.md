@@ -89,6 +89,8 @@ Distributed under the GNU General Public License v3.0. See `LICENSE.txt` for m
 
 ## Contact
 
-If you have any questions about the project or just wanna chat feel free to reach out to me!
+If you have any questions about the project or just wanna chat, feel free to reach out to me!
 
 Cassius V - cassiusfive@gmail.com
+
+\****psssstt***\* *If you're an OSU student, let's do some hackathons*
