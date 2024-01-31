@@ -41,30 +41,40 @@ const ScheduleForm = () => {
     }
 
     return (
-        <form
-            onSubmit={onSubmit}
-            className="mx-auto flex h-svh w-5/6 flex-col justify-center"
-        >
-            {step}
-            <div className="flex justify-between px-10">
-                {!isFirstStep && (
-                    <button
-                        type="button"
-                        className="rounded-md bg-slate-500 px-4 py-2 text-white hover:bg-slate-700"
-                        onClick={back}
-                    >
-                        back
-                    </button>
-                )}
-                <div />
-                <button
-                    type="submit"
-                    className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-700"
-                >
-                    {isLastStep ? "submit" : "continue"}
-                </button>
+        <>
+            <div className="fixed flex h-dvh w-lvw flex-col items-center justify-center bg-white sm:hidden">
+                <h1 className=" text-center text-3xl">
+                    <b>{"Please visit this site on a computer"}</b>
+                </h1>
+                <h2 className="mt-4 text-xl text-gray-700">
+                    or make your screen wider
+                </h2>
             </div>
-        </form>
+            <form
+                onSubmit={onSubmit}
+                className="mx-auto flex h-svh w-5/6 flex-col justify-center"
+            >
+                {step}
+                <div className="flex justify-between px-10">
+                    {!isFirstStep && (
+                        <button
+                            type="button"
+                            className="rounded-md bg-slate-500 px-4 py-2 text-white hover:bg-slate-700"
+                            onClick={back}
+                        >
+                            back
+                        </button>
+                    )}
+                    <div />
+                    <button
+                        type="submit"
+                        className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-700"
+                    >
+                        {isLastStep ? "submit" : "continue"}
+                    </button>
+                </div>
+            </form>
+        </>
     );
 };
 export default ScheduleForm;

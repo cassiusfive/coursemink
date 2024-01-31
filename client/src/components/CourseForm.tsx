@@ -6,6 +6,9 @@ import Fuse from "fuse.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 export type CourseData = {
     courses: Course[];
 };
@@ -77,7 +80,7 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
 
     useEffect(() => {
         const fetchCourses = async () => {
-            const data = await fetch("https://mink-api.fly.dev/v1/courses");
+            const data = await fetch(process.env.API_ENDPOINT + "/courses");
             const courseOptions: Course[] = await data.json();
 
             availableCourses.current = courseOptions;
@@ -90,63 +93,70 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
     }, []);
 
     return (
-        <FormWrapper title="What courses are you taking this term?">
-            <div className="flex w-full flex-col items-center">
-                <input
-                    type="text"
-                    value={searchQuery}
-                    placeholder="Find a course"
-                    className="w-full rounded-md border border-slate-300 px-5 py-3"
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key == "Enter") {
-                            e.preventDefault();
-                            if (searchResult.length > 0) {
-                                addCourse(searchResult[0]);
+        <>
+            <FormWrapper title="What courses are you taking this term?">
+                <div className="flex w-full flex-col items-center">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        placeholder="Find a course"
+                        className="w-full rounded-md border border-slate-300 px-5 py-3"
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key == "Enter") {
+                                e.preventDefault();
+                                if (searchResult.length > 0) {
+                                    addCourse(searchResult[0]);
+                                }
                             }
-                        }
-                    }}
-                />
-                {searchQuery.trimStart().length > 0 && (
-                    <Dropdown courses={searchResult} addCourse={addCourse} />
-                )}
-                <table className="mt-8 w-full">
-                    <tbody>
-                        {courses.map((course) => {
-                            return (
-                                <tr
-                                    key={course.id}
-                                    className="flex items-center justify-between py-1 group-hover:bg-slate-500"
-                                >
-                                    <td className="flex">
-                                        <div className="inline-block min-w-20">
-                                            <b>{course.code}</b>
-                                        </div>
-                                        <div className="px-5">
-                                            {course.title}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button
-                                            type="button"
-                                            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 px-4 py-2 text-white hover:bg-red-700"
-                                            onClick={() => removeCourse(course)}
-                                        >
-                                            <FontAwesomeIcon
-                                                icon={faXmark}
-                                                size="1x"
-                                            />
-                                        </button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </FormWrapper>
+                        }}
+                    />
+                    {searchQuery.trimStart().length > 0 && (
+                        <Dropdown
+                            courses={searchResult}
+                            addCourse={addCourse}
+                        />
+                    )}
+                    <table className="mt-8 w-full">
+                        <tbody>
+                            {courses.map((course) => {
+                                return (
+                                    <tr
+                                        key={course.id}
+                                        className="flex items-center justify-between py-1 group-hover:bg-slate-500"
+                                    >
+                                        <td className="flex">
+                                            <div className="inline-block min-w-20">
+                                                <b>{course.code}</b>
+                                            </div>
+                                            <div className="px-5">
+                                                {course.title}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button
+                                                type="button"
+                                                className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 px-4 py-2 text-white hover:bg-red-700"
+                                                onClick={() =>
+                                                    removeCourse(course)
+                                                }
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={faXmark}
+                                                    size="1x"
+                                                />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </FormWrapper>
+        </>
     );
 };
 

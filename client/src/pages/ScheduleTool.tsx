@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 
 import WeeklySchedule from "../components/WeeklySchedule";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faForward, faBackward } from "@fortawesome/free-solid-svg-icons";
+import {
+    faForward,
+    faBackward,
+    faList,
+} from "@fortawesome/free-solid-svg-icons";
 
 export type SectionEvent = {
     crn: number;
@@ -119,7 +123,7 @@ const ScheduleTool = () => {
                     <button
                         className={
                             "mr-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
-                            (scheduleIndex === 0 ? "hidden" : "")
+                            (scheduleIndex === 0 ? "invisible" : "")
                         }
                         onClick={() => back()}
                     >
@@ -129,7 +133,7 @@ const ScheduleTool = () => {
                         className={
                             "ml-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
                             (scheduleIndex === schedules.length - 1
-                                ? "hidden"
+                                ? "invisible"
                                 : "")
                         }
                         onClick={() => next()}
@@ -137,7 +141,9 @@ const ScheduleTool = () => {
                         <FontAwesomeIcon icon={faForward} size="3x" />
                     </button>
                 </div>
-                <div className="bg-white-300 shrink grow basis-0"></div>
+                <div className="flex shrink grow basis-0 items-center justify-center text-4xl text-white">
+                    <FontAwesomeIcon icon={faList} />
+                </div>
             </footer>
         </>
     );
