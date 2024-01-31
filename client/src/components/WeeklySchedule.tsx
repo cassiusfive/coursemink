@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Schedule, SectionEvent } from "../pages/ScheduleTool";
 
 type TimeLabelProps = {
@@ -25,8 +24,6 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
     const startHour = 8;
     const endHour = 22;
 
-    const [rowHeight, setRowHeight] = useState<number>(0);
-
     type EventColumnProps = {
         events: SectionEvent[];
         colors: Record<number, string>;
@@ -48,7 +45,7 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                                 {section && (
                                     <div
                                         className={
-                                            "absolute flex w-full rounded-md text-white " +
+                                            "absolute z-40 flex w-full rounded-md text-white " +
                                             colors[section.courseId]
                                         }
                                         style={{

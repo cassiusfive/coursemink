@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 
 import WeeklySchedule from "../components/WeeklySchedule";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faForward,
-    faBackward,
-    faChalkboardTeacher,
-    faClock,
-} from "@fortawesome/free-solid-svg-icons";
+import { faForward, faBackward } from "@fortawesome/free-solid-svg-icons";
 
 export type SectionEvent = {
     crn: number;
@@ -75,7 +70,7 @@ const ScheduleTool = () => {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set("Content-Type", "application/json");
         const fetchSchedules = async () => {
-            const res = await fetch("http://localhost:3000/v1/schedules", {
+            const res = await fetch("https://mink-api.fly.dev/v1/schedules", {
                 method: "POST",
                 headers: requestHeaders,
                 body: JSON.stringify({
@@ -114,21 +109,17 @@ const ScheduleTool = () => {
                     />
                 </div>
             </div>
-            <footer className="fixed bottom-0 z-50 flex w-full justify-between bg-neutral-800 align-middle">
-                <div className="mx-24 grid grow grid-cols-[min-content_1fr] items-center justify-between gap-y-2 py-3 text-xl text-white">
-                    <FontAwesomeIcon icon={faChalkboardTeacher} size="lg" />
-                    <div
-                        className="ml-4 h-4 grow rounded-sm bg-green-300 transition-[width] duration-150"
-                        style={{ width: `${scheduleIndex * 50}%` }}
-                    ></div>
-                    <FontAwesomeIcon icon={faClock} size="lg" />
-                    <div className="ml-4 h-4 grow rounded-sm bg-blue-300"></div>
+            <footer className="fixed bottom-0 z-50 flex min-h-20 w-full justify-between bg-neutral-800 align-middle">
+                <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
+                    <b className="">
+                        {scheduleIndex + 1} / {schedules.length}
+                    </b>
                 </div>
-                <div className="flex min-h-20 items-stretch justify-center">
+                <div className="flex shrink grow basis-0 items-stretch justify-center">
                     <button
                         className={
                             "mr-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
-                            (scheduleIndex === 0 ? "collapse" : "")
+                            (scheduleIndex === 0 ? "hidden" : "")
                         }
                         onClick={() => back()}
                     >
@@ -138,7 +129,7 @@ const ScheduleTool = () => {
                         className={
                             "ml-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
                             (scheduleIndex === schedules.length - 1
-                                ? "collapse"
+                                ? "hidden"
                                 : "")
                         }
                         onClick={() => next()}
@@ -146,11 +137,7 @@ const ScheduleTool = () => {
                         <FontAwesomeIcon icon={faForward} size="3x" />
                     </button>
                 </div>
-                <div className="flex grow items-center justify-center text-nowrap pr-6 text-3xl text-white">
-                    <b className=" w-40">
-                        {scheduleIndex + 1} / {schedules.length}
-                    </b>
-                </div>
+                <div className="bg-white-300 shrink grow basis-0"></div>
             </footer>
         </>
     );
