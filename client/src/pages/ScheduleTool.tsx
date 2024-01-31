@@ -3,6 +3,12 @@ import { FormData } from "./ScheduleForm";
 import { useState, useEffect } from "react";
 
 import WeeklySchedule from "../components/WeeklySchedule";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faForward,
+    faBackward,
+    faList,
+} from "@fortawesome/free-solid-svg-icons";
 
 export type SectionEvent = {
     crn: number;
@@ -33,10 +39,10 @@ const ScheduleTool = () => {
 
     const colorbank: string[] = [
         "bg-red-500 hover:bg-red-700",
-        "bg-blue-500 hover:bg-blue-700",
+        "bg-cyan-500 hover:bg-cyan-700",
         "bg-green-500 hover:bg-green-700",
-        "bg-pink-500 hover:bg-pink-700",
-        "bg-yellow-500 hover:bg-yellow-700",
+        "bg-purple-500 hover:bg-purple-700",
+        "bg-orange-500 hover:bg-orange-700",
     ];
 
     const colors: Record<number, string> = data.courses.reduce(
@@ -68,7 +74,7 @@ const ScheduleTool = () => {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set("Content-Type", "application/json");
         const fetchSchedules = async () => {
-            const res = await fetch("http://localhost:3000/v1/schedules", {
+            const res = await fetch("https://mink-api.fly.dev/v1/schedules", {
                 method: "POST",
                 headers: requestHeaders,
                 body: JSON.stringify({
@@ -99,41 +105,46 @@ const ScheduleTool = () => {
 
     return (
         <>
-            <div className="flex justify-center py-5 px-5">
-                <div className="grow px-10 flex flex-col justify-center">
-                    Prof. Score:{" "}
-                    <b>{schedules[scheduleIndex].professorScore || 0}</b>
+            <div className="mb-28 mt-10 px-10">
+                <div>
+                    <WeeklySchedule
+                        colors={colors}
+                        schedule={schedules[scheduleIndex]}
+                    />
                 </div>
-                <div className="grow px-10 flex flex-col justify-center">
-                    Overlap Penalty:{" "}
-                    <b>{schedules[scheduleIndex].overlapPenalty || 0}</b>
-                </div>
-                <div className="grow px-10 flex flex-col justify-center">
-                    Time Preference Penalty:{" "}
-                    <b>{schedules[scheduleIndex].timePreferencePenalty || 0}</b>
-                </div>
-                <button
-                    className="bg-slate-500 hover:bg-slate-700 text-white my-4 mx-4 rounded-md min-w-12"
-                    onClick={() => back()}
-                >
-                    {"<"}
-                </button>
-                <h1 className="text-3xl font-bold text-center p-5 grow">
-                    Scheduling
-                </h1>
-                <button
-                    className="bg-slate-500 hover:bg-slate-700 text-white my-4 mx-4 rounded-md min-w-12"
-                    onClick={() => next()}
-                >
-                    {">"}
-                </button>
             </div>
-            <div className="px-10 flex justify-center">
-                <WeeklySchedule
-                    colors={colors}
-                    schedule={schedules[scheduleIndex]}
-                />
-            </div>
+            <footer className="fixed bottom-0 z-50 flex min-h-20 w-full justify-between bg-neutral-800 align-middle">
+                <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
+                    <b className="">
+                        {scheduleIndex + 1} / {schedules.length}
+                    </b>
+                </div>
+                <div className="flex shrink grow basis-0 items-stretch justify-center">
+                    <button
+                        className={
+                            "mr-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
+                            (scheduleIndex === 0 ? "invisible" : "")
+                        }
+                        onClick={() => back()}
+                    >
+                        <FontAwesomeIcon icon={faBackward} size="3x" />
+                    </button>
+                    <button
+                        className={
+                            "ml-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
+                            (scheduleIndex === schedules.length - 1
+                                ? "invisible"
+                                : "")
+                        }
+                        onClick={() => next()}
+                    >
+                        <FontAwesomeIcon icon={faForward} size="3x" />
+                    </button>
+                </div>
+                <div className="flex shrink grow basis-0 items-center justify-center text-4xl text-white">
+                    <FontAwesomeIcon icon={faList} />
+                </div>
+            </footer>
         </>
     );
 };

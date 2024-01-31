@@ -265,8 +265,6 @@ class RegistrationScraper {
             throw new Error("No data provided");
         }
 
-        console.log(data);
-
         data = data.filter((rawSection: any) => {
             const excludedAttributes = ["HNRS"];
             const excludedTypes = ["Examination for Credit"];

@@ -8,8 +8,8 @@ interface FormWrapperProps {
 const FormWrapper = ({ title, children }: FormWrapperProps) => {
     return (
         <div className="p-10">
-            <h1 className="text-3xl font-bold text-center p-5">{title}</h1>
-            <div>{children}</div>
+            <h1 className="p-5 text-center text-3xl font-bold">{title}</h1>
+            <div className="flex justify-center">{children}</div>
         </div>
     );
 };

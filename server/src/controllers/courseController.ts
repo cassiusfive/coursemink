@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import scraper from "../services/scraper.js";
 import CourseServices from "../services/courseServices.js";
 
 export default class CourseController {
