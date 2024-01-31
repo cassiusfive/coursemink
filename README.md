@@ -1,6 +1,6 @@
 ## About The Project
 
-Mink is a student-oriented class scheduling tool designed to streamline the course registration process. You provide the classes you plan to take along with your preferences, and Mink finds the schedule that best fits your needs. Currently serving Oregon State University’s course catalog.
+Mink is a student-oriented class scheduling tool designed to streamline the course registration process. You provide the classes you plan to take along with your preferences, and Mink finds the schedules that best fit your needs. Currently serving Oregon State University’s course catalog.
 
 See it live [here](https://mink-client.fly.dev)!
 
