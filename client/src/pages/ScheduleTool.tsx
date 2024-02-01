@@ -74,13 +74,16 @@ const ScheduleTool = () => {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set("Content-Type", "application/json");
         const fetchSchedules = async () => {
-            const res = await fetch("https://mink-api.fly.dev/v1/schedules", {
-                method: "POST",
-                headers: requestHeaders,
-                body: JSON.stringify({
-                    courses: data.courses.map((course) => course.id),
-                }),
-            });
+            const res = await fetch(
+                import.meta.env.VITE_VITE_API_ENDPOINT + "/schedules",
+                {
+                    method: "POST",
+                    headers: requestHeaders,
+                    body: JSON.stringify({
+                        courses: data.courses.map((course) => course.id),
+                    }),
+                }
+            );
             if (res.ok) {
                 const json = await res.json();
                 setSchedules(json);

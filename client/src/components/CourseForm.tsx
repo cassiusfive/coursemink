@@ -6,9 +6,6 @@ import Fuse from "fuse.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
-import dotenv from "dotenv";
-dotenv.config();
-
 export type CourseData = {
     courses: Course[];
 };
@@ -80,7 +77,9 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
 
     useEffect(() => {
         const fetchCourses = async () => {
-            const data = await fetch(process.env.API_ENDPOINT + "/courses");
+            const data = await fetch(
+                import.meta.env.VITE_API_ENDPOINT + "/courses"
+            );
             const courseOptions: Course[] = await data.json();
 
             availableCourses.current = courseOptions;
