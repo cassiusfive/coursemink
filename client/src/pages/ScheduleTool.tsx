@@ -75,7 +75,7 @@ const ScheduleTool = () => {
         requestHeaders.set("Content-Type", "application/json");
         const fetchSchedules = async () => {
             const res = await fetch(
-                import.meta.env.VITE_VITE_API_ENDPOINT + "/schedules",
+                import.meta.env.VITE_API_ENDPOINT + "/schedules",
                 {
                     method: "POST",
                     headers: requestHeaders,
