@@ -6,6 +6,9 @@ import CourseForm from "../components/CourseForm";
 import PreferenceForm from "../components/PreferenceForm";
 import { useNavigate } from "react-router-dom";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBackward, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+
 export type FormData = {
     courses: Course[];
     prefStart: string;
@@ -55,22 +58,25 @@ const ScheduleForm = () => {
                 className="mx-auto flex h-svh w-5/6 flex-col justify-center"
             >
                 {step}
-                <div className="flex justify-between px-10">
+                <div className="flex items-center justify-center px-10">
                     {!isFirstStep && (
                         <button
                             type="button"
-                            className="rounded-md bg-slate-500 px-4 py-2 text-white hover:bg-slate-700"
+                            className="group rounded-md px-4 py-2 text-blue-500 hover:text-blue-700"
                             onClick={back}
                         >
-                            back
+                            <FontAwesomeIcon
+                                icon={faArrowLeft}
+                            ></FontAwesomeIcon>
+                            <span className="mx-3">previous</span>
                         </button>
                     )}
                     <div />
                     <button
                         type="submit"
-                        className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-700"
+                        className="mx-3 rounded-md bg-blue-500 px-5 py-2 text-white hover:bg-blue-700"
                     >
-                        {isLastStep ? "submit" : "continue"}
+                        {isLastStep ? "submit" : "next"}
                     </button>
                 </div>
             </form>
