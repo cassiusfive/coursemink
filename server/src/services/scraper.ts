@@ -18,7 +18,7 @@ class RegistrationScraper {
     private async setTerm(termCode: number | string): Promise<string> {
         const res = await this.axiosInstance.post(
             "term/search?mode=search",
-            { term: 202402 },
+            { term: termCode },
             {
                 headers: {
                     "content-type": "application/x-www-form-urlencoded",
@@ -158,7 +158,7 @@ class RegistrationScraper {
     }
 
     public async scrapeEmptyCourses(): Promise<Partial<Course>[]> {
-        const cookies = await this.setTerm(202402);
+        const cookies = await this.setTerm(202403);
 
         let set: Set<String> = new Set();
         let courseList: Partial<Course>[] = [];
@@ -168,7 +168,7 @@ class RegistrationScraper {
             {
                 params: {
                     txt_campus: "C",
-                    txt_term: 202402,
+                    txt_term: 202403,
                     pageOffset: 0,
                     pageMaxSize: 500,
                 },
@@ -199,7 +199,7 @@ class RegistrationScraper {
                 {
                     params: {
                         txt_campus: "C",
-                        txt_term: 202402,
+                        txt_term: 202403,
                         pageOffset: coursesSearched,
                         pageMaxSize: 500,
                     },
@@ -230,7 +230,7 @@ class RegistrationScraper {
         code: string,
         title: string
     ): Promise<Partial<Course>> {
-        const cookies = await this.setTerm(202402);
+        const cookies = await this.setTerm(202403);
 
         const [subjectCode, courseNumber] = code
             .split(/([a-zA-Z]+)([0-9]+.+)/)
@@ -241,7 +241,7 @@ class RegistrationScraper {
             {
                 params: {
                     txt_campus: "C",
-                    txt_term: 202402,
+                    txt_term: 202403,
                     txt_subject: subjectCode,
                     txt_courseNumber: courseNumber,
                     pageOffset: 0,
