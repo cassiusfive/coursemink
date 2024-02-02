@@ -8,7 +8,7 @@ import {
     faForward,
     faBackward,
     faBookmark,
-    faArrowUpFromBracket,
+    faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
 
@@ -73,8 +73,8 @@ const ScheduleTool = () => {
     let isInit = false;
     const currentSchedule = schedules[scheduleIndex];
 
-    const [savedSchedules, setSavedSchedules] = useState<Schedule[]>([]);
-    const scheduleSaved = savedSchedules.includes(currentSchedule);
+    const [savedSchedules, setSavedSchedules] = useState<number[]>([]);
+    const scheduleSaved = savedSchedules.includes(scheduleIndex);
 
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
@@ -114,18 +114,35 @@ const ScheduleTool = () => {
 
     const toggleSaved = () => {
         if (!scheduleSaved) {
-            setSavedSchedules([currentSchedule, ...savedSchedules]);
+            setSavedSchedules([scheduleIndex, ...savedSchedules].sort());
         } else {
-            const newSavedSchedules = savedSchedules.filter((schedule) => {
-                return schedule != currentSchedule;
-            });
-            setSavedSchedules(newSavedSchedules);
+            setSavedSchedules(
+                savedSchedules.filter((i) => {
+                    return i != scheduleIndex;
+                })
+            );
         }
     };
 
     return (
         <>
-            <header className="fixed top-0 z-50 flex min-h-20 w-full justify-between bg-neutral-800 align-middle"></header>
+            <header className="justify-left fixed top-0 z-50 flex min-h-20 w-full items-center bg-neutral-800 px-5 align-middle text-white">
+                <span className="px-5">
+                    <b>Saved:</b>
+                </span>
+                {savedSchedules.map((id) => {
+                    return (
+                        <button
+                            className="px-5 py-2 text-2xl  underline hover:text-yellow-300"
+                            onClick={() => {
+                                setScheduleIndex(id);
+                            }}
+                        >
+                            <b>#{id + 1}</b>
+                        </button>
+                    );
+                })}
+            </header>
             <div className="my-28 px-10">
                 <WeeklySchedule colors={colors} schedule={currentSchedule} />
             </div>
@@ -159,7 +176,7 @@ const ScheduleTool = () => {
                 </div>
                 <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl text-white">
                     <button className="px-5 transition duration-200 hover:scale-125 active:scale-90">
-                        <FontAwesomeIcon icon={faArrowUpFromBracket} />
+                        <FontAwesomeIcon icon={faInfoCircle} />
                     </button>
                     <button
                         className="px-5 transition duration-200 hover:scale-125 active:scale-90"
