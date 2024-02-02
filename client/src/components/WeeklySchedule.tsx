@@ -97,31 +97,31 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                     </ul>
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-28 z-50 box-border border-b bg-white py-2 text-center">
                         Monday
                     </div>
                     <EventColumn events={schedule.monday} colors={colors} />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-28 z-50 box-border border-b bg-white py-2 text-center">
                         Tuesday
                     </div>
                     <EventColumn events={schedule.tuesday} colors={colors} />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-28 z-50 box-border border-b bg-white py-2 text-center">
                         Wednesday
                     </div>
                     <EventColumn events={schedule.wednesday} colors={colors} />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-28 z-50 box-border border-b bg-white py-2 text-center">
                         Thursday
                     </div>
                     <EventColumn events={schedule.thursday} colors={colors} />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-28 z-50 box-border border-b bg-white py-2 text-center">
                         Friday
                     </div>
                     <EventColumn events={schedule.friday} colors={colors} />

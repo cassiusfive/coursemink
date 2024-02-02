@@ -7,8 +7,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faForward,
     faBackward,
-    faList,
+    faBookmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
 
 export type SectionEvent = {
     crn: number;
@@ -69,6 +70,10 @@ const ScheduleTool = () => {
     const [schedules, setSchedules] = useState<Schedule[]>(INITIAL_DATA);
     const [scheduleIndex, setScheduleIndex] = useState<number>(0);
     let isInit = false;
+    const currentSchedule = schedules[scheduleIndex];
+
+    const [savedSchedules, setSavedSchedules] = useState<Schedule[]>([]);
+    const scheduleSaved = savedSchedules.includes(currentSchedule);
 
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
@@ -106,15 +111,22 @@ const ScheduleTool = () => {
         setScheduleIndex((i) => i - 1);
     };
 
+    const toggleSaved = () => {
+        if (!scheduleSaved) {
+            setSavedSchedules([currentSchedule, ...savedSchedules]);
+        } else {
+            const newSavedSchedules = savedSchedules.filter((schedule) => {
+                return schedule != currentSchedule;
+            });
+            setSavedSchedules(newSavedSchedules);
+        }
+    };
+
     return (
         <>
-            <div className="mb-28 mt-10 px-10">
-                <div>
-                    <WeeklySchedule
-                        colors={colors}
-                        schedule={schedules[scheduleIndex]}
-                    />
-                </div>
+            <header className="fixed top-0 z-50 flex min-h-20 w-full justify-between bg-neutral-800 align-middle"></header>
+            <div className="my-28 px-10">
+                <WeeklySchedule colors={colors} schedule={currentSchedule} />
             </div>
             <footer className="fixed bottom-0 z-50 flex min-h-20 w-full justify-between bg-neutral-800 align-middle">
                 <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
@@ -144,8 +156,12 @@ const ScheduleTool = () => {
                         <FontAwesomeIcon icon={faForward} size="3x" />
                     </button>
                 </div>
-                <div className="flex shrink grow basis-0 items-center justify-center text-4xl text-white">
-                    <FontAwesomeIcon icon={faList} />
+                <div className="flex shrink grow basis-0 items-center justify-center bg-slate-700 text-4xl text-white">
+                    <button className="px-2" onClick={() => toggleSaved()}>
+                        <FontAwesomeIcon
+                            icon={scheduleSaved ? faBookmark : faRBookmark}
+                        />
+                    </button>
                 </div>
             </footer>
         </>
