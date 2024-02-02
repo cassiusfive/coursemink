@@ -8,6 +8,7 @@ import {
     faForward,
     faBackward,
     faBookmark,
+    faArrowUpFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
 
@@ -128,7 +129,7 @@ const ScheduleTool = () => {
             <div className="my-28 px-10">
                 <WeeklySchedule colors={colors} schedule={currentSchedule} />
             </div>
-            <footer className="fixed bottom-0 z-50 flex min-h-20 w-full justify-between bg-neutral-800 align-middle">
+            <footer className="fixed bottom-0 z-50 flex min-h-20 w-dvw justify-between bg-neutral-800 px-5 align-middle">
                 <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
                     <b className="">
                         {scheduleIndex + 1} / {schedules.length}
@@ -156,8 +157,15 @@ const ScheduleTool = () => {
                         <FontAwesomeIcon icon={faForward} size="3x" />
                     </button>
                 </div>
-                <div className="flex shrink grow basis-0 items-center justify-center bg-slate-700 text-4xl text-white">
-                    <button className="px-2" onClick={() => toggleSaved()}>
+                <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl text-white">
+                    <button className="px-5 transition duration-200 hover:scale-125 active:scale-90">
+                        <FontAwesomeIcon icon={faArrowUpFromBracket} />
+                    </button>
+                    <button
+                        className="px-5 transition duration-200 hover:scale-125 active:scale-90"
+                        style={{ color: scheduleSaved ? "#FDE047" : "" }}
+                        onClick={() => toggleSaved()}
+                    >
                         <FontAwesomeIcon
                             icon={scheduleSaved ? faBookmark : faRBookmark}
                         />
