@@ -11,6 +11,7 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV="production"
+ENV VITE_API="https://mink-api.fly.dev/v1"
 
 # Throw-away build stage to reduce size of final image
 FROM base as build
