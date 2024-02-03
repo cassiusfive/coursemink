@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 import WeeklySchedule from "../components/WeeklySchedule";
 import Modal from "../components/Modal";
+import ScheduleAccordion from "../components/ScheduleAccordion";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -90,14 +91,16 @@ const ScheduleTool = () => {
                 }
             );
             if (res.ok) {
-                const json = await res.json();
-                setSchedules(json);
+                const schedulesData: Schedule[] = await res.json();
+                setSchedules(schedulesData);
+                if (schedulesData.length > 1)
+                    setSavedSchedules([0, schedulesData.length - 1]);
             }
         };
 
         if (!isInit) {
-            fetchSchedules().catch(console.error);
             isInit = true;
+            fetchSchedules().catch(console.error);
         }
     }, []);
 
@@ -118,7 +121,9 @@ const ScheduleTool = () => {
 
     const toggleSaved = () => {
         if (!scheduleSaved) {
-            setSavedSchedules([scheduleIndex, ...savedSchedules].sort());
+            setSavedSchedules(
+                [scheduleIndex, ...savedSchedules].sort((a, b) => a - b)
+            );
         } else {
             setSavedSchedules(
                 savedSchedules.filter((i) => {
@@ -130,7 +135,24 @@ const ScheduleTool = () => {
 
     return (
         <>
-            {infoActive && <Modal />}
+            {infoActive && (
+                <Modal>
+                    <div className="flex h-[calc(100%-14rem)] w-9/12 flex-col rounded-md bg-white">
+                        <div className="flex bg-stone-700 p-4 text-white">
+                            <span className="grow">Schedule Details</span>
+                            <button
+                                className="px-4"
+                                onClick={() => setInfoActive(false)}
+                            >
+                                x
+                            </button>
+                        </div>
+                        <div className="p-5">
+                            <ScheduleAccordion schedule={currentSchedule} />
+                        </div>
+                    </div>
+                </Modal>
+            )}
             <header className="justify-left fixed top-0 z-40 flex min-h-20 w-full items-center bg-neutral-800 px-5 align-middle text-white">
                 <span className="px-5">
                     <b>
@@ -186,6 +208,7 @@ const ScheduleTool = () => {
                 <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl text-white">
                     <button
                         className="px-5 transition duration-200 hover:scale-125 active:scale-90"
+                        style={{ color: infoActive ? "#93C5FD" : "" }}
                         onClick={() => setInfoActive(!infoActive)}
                     >
                         <FontAwesomeIcon icon={faInfoCircle} />
