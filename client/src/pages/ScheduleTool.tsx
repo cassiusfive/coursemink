@@ -3,6 +3,9 @@ import { FormData } from "./ScheduleForm";
 import { useState, useEffect } from "react";
 
 import WeeklySchedule from "../components/WeeklySchedule";
+import Modal from "../components/Modal";
+import ScheduleAccordion from "../components/ScheduleAccordion";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faForward,
@@ -73,9 +76,6 @@ const ScheduleTool = () => {
     let isInit = false;
     const currentSchedule = schedules[scheduleIndex];
 
-    const [savedSchedules, setSavedSchedules] = useState<number[]>([]);
-    const scheduleSaved = savedSchedules.includes(scheduleIndex);
-
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set("Content-Type", "application/json");
@@ -91,14 +91,16 @@ const ScheduleTool = () => {
                 }
             );
             if (res.ok) {
-                const json = await res.json();
-                setSchedules(json);
+                const schedulesData: Schedule[] = await res.json();
+                setSchedules(schedulesData);
+                if (schedulesData.length > 1)
+                    setSavedSchedules([0, schedulesData.length - 1]);
             }
         };
 
         if (!isInit) {
-            fetchSchedules().catch(console.error);
             isInit = true;
+            fetchSchedules().catch(console.error);
         }
     }, []);
 
@@ -112,9 +114,16 @@ const ScheduleTool = () => {
         setScheduleIndex((i) => i - 1);
     };
 
+    const [infoActive, setInfoActive] = useState<boolean>(false);
+
+    const [savedSchedules, setSavedSchedules] = useState<number[]>([]);
+    const scheduleSaved = savedSchedules.includes(scheduleIndex);
+
     const toggleSaved = () => {
         if (!scheduleSaved) {
-            setSavedSchedules([scheduleIndex, ...savedSchedules].sort());
+            setSavedSchedules(
+                [scheduleIndex, ...savedSchedules].sort((a, b) => a - b)
+            );
         } else {
             setSavedSchedules(
                 savedSchedules.filter((i) => {
@@ -126,9 +135,31 @@ const ScheduleTool = () => {
 
     return (
         <>
-            <header className="justify-left fixed top-0 z-50 flex min-h-20 w-full items-center bg-neutral-800 px-5 align-middle text-white">
+            {infoActive && (
+                <Modal>
+                    <div className="flex h-[calc(100%-14rem)] w-9/12 flex-col rounded-md bg-white">
+                        <div className="flex bg-stone-700 p-4 text-white">
+                            <span className="grow">Schedule Details</span>
+                            <button
+                                className="px-4"
+                                onClick={() => setInfoActive(false)}
+                            >
+                                x
+                            </button>
+                        </div>
+                        <div className="p-5">
+                            <ScheduleAccordion schedule={currentSchedule} />
+                        </div>
+                    </div>
+                </Modal>
+            )}
+            <header className="justify-left fixed top-0 z-40 flex min-h-20 w-full items-center bg-neutral-800 px-5 align-middle text-white">
                 <span className="px-5">
-                    <b>Saved:</b>
+                    <b>
+                        {savedSchedules.length
+                            ? "Saved:"
+                            : "Saved schedules will show up here"}
+                    </b>
                 </span>
                 {savedSchedules.map((id) => {
                     return (
@@ -146,7 +177,7 @@ const ScheduleTool = () => {
             <div className="my-28 px-10">
                 <WeeklySchedule colors={colors} schedule={currentSchedule} />
             </div>
-            <footer className="fixed bottom-0 z-50 flex min-h-20 w-dvw justify-between bg-neutral-800 px-5 align-middle">
+            <footer className="fixed bottom-0 z-40 flex min-h-20 w-dvw justify-between bg-neutral-800 px-5 align-middle">
                 <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
                     <b className="">
                         {scheduleIndex + 1} / {schedules.length}
@@ -175,7 +206,11 @@ const ScheduleTool = () => {
                     </button>
                 </div>
                 <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl text-white">
-                    <button className="px-5 transition duration-200 hover:scale-125 active:scale-90">
+                    <button
+                        className="px-5 transition duration-200 hover:scale-125 active:scale-90"
+                        style={{ color: infoActive ? "#93C5FD" : "" }}
+                        onClick={() => setInfoActive(!infoActive)}
+                    >
                         <FontAwesomeIcon icon={faInfoCircle} />
                     </button>
                     <button
