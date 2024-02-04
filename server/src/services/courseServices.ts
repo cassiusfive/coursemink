@@ -47,12 +47,10 @@ export default class CourseServices {
                     sectionTypeValues
                 );
                 for (const section of sectionType.sections) {
-                    console.log(section.instructorName);
                     const nameFuzzyRes = await pool.query(
                         "SELECT id, name FROM professor WHERE SIMILARITY(name, $1) > 0.6 ORDER BY SIMILARITY(name, $1) DESC LIMIT 1",
                         [section.instructorName]
                     );
-                    console.log(nameFuzzyRes.rows[0]?.name);
                     let professorId = nameFuzzyRes.rows[0]?.id;
                     if (professorId == null) {
                         professorId = await ProfServices.insertProf({

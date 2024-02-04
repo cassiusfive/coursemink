@@ -265,20 +265,20 @@ class RegistrationScraper {
         if (!data) {
             throw new Error("No data provided");
         }
-
         data = data.filter((rawSection: any) => {
             const excludedAttributes = ["HNRS"];
             const excludedTypes = ["Examination for Credit"];
-            if (rawSection?.faculty.length < 1) {
-                return false;
-            }
+            // if (rawSection?.faculty.length < 1) {
+            //     return false;
+            // }
             if (rawSection?.meetingsFaculty.length < 1) {
                 return false;
             }
             if (
                 rawSection.sectionAttributes?.some((attribute: any) =>
                     excludedAttributes.includes(attribute.code)
-                )
+                ) ||
+                excludedTypes.includes(rawSection.scheduleTypeDescription)
             ) {
                 return false;
             }
@@ -306,25 +306,35 @@ class RegistrationScraper {
                 linkedGroups[linker][section.scheduleTypeDescription] = [];
             }
             const meetInfo = section.meetingsFaculty[0];
-            linkedGroups[linker][section.scheduleTypeDescription].push({
-                crn: section.courseReferenceNumber,
-                credits: section.creditHours || 1,
-                maxEnrollment: section.maximumEnrollment,
-                enrollment: section.enrollment,
-                instructorName: this.normalizeName(
-                    section.faculty.find(
-                        (faculty: any) => faculty.primaryIndicator
-                    )?.displayName || "staff"
-                ),
-                start: this.parseTime(meetInfo.meetingTime.beginTime),
-                end: this.parseTime(meetInfo.meetingTime.endTime),
-                onMonday: meetInfo.meetingTime.monday,
-                onTuesday: meetInfo.meetingTime.tuesday,
-                onWednesday: meetInfo.meetingTime.thursday,
-                onThursday: meetInfo.meetingTime.wednesday,
-                onFriday: meetInfo.meetingTime.friday,
-                location: meetInfo.buildingDescription + " " + meetInfo,
-            });
+            const instructorName =
+                section.faculty.length > 0
+                    ? this.normalizeName(
+                          section.faculty.find(
+                              (faculty: any) => faculty.primaryIndicator
+                          ).displayName
+                      )
+                    : "Staff";
+
+            try {
+                linkedGroups[linker][section.scheduleTypeDescription].push({
+                    crn: section.courseReferenceNumber,
+                    credits: section.creditHours || 1,
+                    maxEnrollment: section.maximumEnrollment,
+                    enrollment: section.enrollment,
+                    instructorName: instructorName,
+                    start: this.parseTime(meetInfo.meetingTime.beginTime),
+                    end: this.parseTime(meetInfo.meetingTime.endTime),
+                    onMonday: meetInfo.meetingTime.monday,
+                    onTuesday: meetInfo.meetingTime.tuesday,
+                    onWednesday: meetInfo.meetingTime.thursday,
+                    onThursday: meetInfo.meetingTime.wednesday,
+                    onFriday: meetInfo.meetingTime.friday,
+                    location: meetInfo.buildingDescription + " " + meetInfo,
+                });
+            } catch (e) {
+                console.log(e);
+                console.log(meetInfo);
+            }
         }
 
         for (const linker in linkedGroups) {
