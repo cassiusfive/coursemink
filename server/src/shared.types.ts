@@ -28,6 +28,7 @@ export interface Section {
     onWednesday: boolean;
     onThursday: boolean;
     onFriday: boolean;
+    location: string;
 }
 
 export interface Timestamp {

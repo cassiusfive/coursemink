@@ -261,6 +261,7 @@ class RegistrationScraper {
     }
 
     private normalizeCourseData(data: any): Partial<Course> {
+        console.log(data);
         if (!data) {
             throw new Error("No data provided");
         }
@@ -304,6 +305,7 @@ class RegistrationScraper {
             if (!linkedGroups[linker][section.scheduleTypeDescription]) {
                 linkedGroups[linker][section.scheduleTypeDescription] = [];
             }
+            const meetInfo = section.meetingsFaculty[0];
             linkedGroups[linker][section.scheduleTypeDescription].push({
                 crn: section.courseReferenceNumber,
                 credits: section.creditHours || 1,
@@ -314,17 +316,14 @@ class RegistrationScraper {
                         (faculty: any) => faculty.primaryIndicator
                     )?.displayName || "staff"
                 ),
-                start: this.parseTime(
-                    section.meetingsFaculty[0].meetingTime.beginTime
-                ),
-                end: this.parseTime(
-                    section.meetingsFaculty[0].meetingTime.endTime
-                ),
-                onMonday: section.meetingsFaculty[0].meetingTime.monday,
-                onTuesday: section.meetingsFaculty[0].meetingTime.tuesday,
-                onWednesday: section.meetingsFaculty[0].meetingTime.thursday,
-                onThursday: section.meetingsFaculty[0].meetingTime.wednesday,
-                onFriday: section.meetingsFaculty[0].meetingTime.friday,
+                start: this.parseTime(meetInfo.meetingTime.beginTime),
+                end: this.parseTime(meetInfo.meetingTime.endTime),
+                onMonday: meetInfo.meetingTime.monday,
+                onTuesday: meetInfo.meetingTime.tuesday,
+                onWednesday: meetInfo.meetingTime.thursday,
+                onThursday: meetInfo.meetingTime.wednesday,
+                onFriday: meetInfo.meetingTime.friday,
+                location: meetInfo.buildingDescription + " " + meetInfo,
             });
         }
 

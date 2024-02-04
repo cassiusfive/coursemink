@@ -1,5 +1,7 @@
+import { Professor } from "./../shared.types";
 import pool from "../utils/database.js";
 import scraper from "./scraper.js";
+import ProfServices from "./profServices.js";
 import { Course, Timestamp } from "../shared.types.js";
 
 interface CourseInfo {
@@ -45,10 +47,21 @@ export default class CourseServices {
                     sectionTypeValues
                 );
                 for (const section of sectionType.sections) {
+                    console.log(section.instructorName);
                     const nameFuzzyRes = await pool.query(
-                        "SELECT id FROM professor ORDER BY SIMILARITY(name, $1) DESC LIMIT 1",
+                        "SELECT id, name FROM professor WHERE SIMILARITY(name, $1) > 0.6 ORDER BY SIMILARITY(name, $1) DESC LIMIT 1",
                         [section.instructorName]
                     );
+                    console.log(nameFuzzyRes.rows[0]?.name);
+                    let professorId = nameFuzzyRes.rows[0]?.id;
+                    if (professorId == null) {
+                        professorId = await ProfServices.insertProf({
+                            name: section.instructorName,
+                            avg_rating: 0,
+                            avg_difficulty: 0,
+                            num_ratings: 0,
+                        });
+                    }
                     const sectionSql =
                         'INSERT INTO section(section_type_id, crn, credits, "maxEnrollment", professor_id, enrollment, "start", "end", "onMonday", "onTuesday", "onWednesday", "onThursday", "onFriday") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)';
                     const startTime = `${section.start.hours}:${section.start.minutes}`;
@@ -58,7 +71,7 @@ export default class CourseServices {
                         section.crn,
                         section.credits,
                         section.maxEnrollment,
-                        nameFuzzyRes.rows[0].id,
+                        professorId,
                         section.enrollment,
                         startTime,
                         endTime,
@@ -102,7 +115,8 @@ export default class CourseServices {
     static async getCourse(id: number): Promise<Course> {
         const courseInfo = await CourseServices.getCourseInfo(id);
         const now = new Date();
-        if (now.getTime() - courseInfo.updated_at.getTime() > 360000) {
+        // 360000
+        if (now.getTime() - courseInfo.updated_at.getTime() > 0) {
             const course = await scraper.scrapeCourse(
                 courseInfo.code,
                 courseInfo.title
