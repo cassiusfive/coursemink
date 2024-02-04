@@ -7,6 +7,8 @@ import {
     Professor,
     Timestamp,
 } from "../shared.types";
+import pkg from "he";
+const { decode } = pkg;
 
 class RegistrationScraper {
     private axiosInstance = axios.create({
@@ -183,14 +185,14 @@ class RegistrationScraper {
 
         initialSearch.data.data.forEach((courseData: any) => {
             const course: Partial<Course> = {
-                title: courseData.courseTitle,
+                title: decode(courseData.courseTitle),
                 code: courseData.subjectCourse,
                 offerings: [],
             };
-            if (!set.has(course.code! + course.title!)) {
+            if (!set.has(course.code || "" + course.title || "")) {
                 courseList.push(course);
             }
-            set.add(course.code! + course.title!);
+            set.add(course.code || "" + course.title || "");
         });
 
         while (coursesSearched < totalCourses) {
@@ -212,14 +214,14 @@ class RegistrationScraper {
 
             search.data.data.forEach((courseData: any) => {
                 const course: Partial<Course> = {
-                    title: courseData.courseTitle,
+                    title: decode(courseData.courseTitle),
                     code: courseData.subjectCourse,
                     offerings: [],
                 };
                 if (!set.has(course.code || "" + course.title || "")) {
                     courseList.push(course);
                 }
-                set.add(course.code! + course.title!);
+                set.add(course.code || "" + course.title || "");
             });
         }
 
@@ -290,7 +292,7 @@ class RegistrationScraper {
         }
 
         const course: Partial<Course> = {
-            title: data[0].courseTitle,
+            title: decode(data[0].courseTitle),
             code: data[0].subject + data[0].courseNumber,
             offerings: [],
         };
