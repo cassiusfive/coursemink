@@ -2,18 +2,57 @@ import { useState } from "react";
 
 import { Schedule } from "../pages/ScheduleTool";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faCopy } from "@fortawesome/free-solid-svg-icons";
 
 type PanelProps = {
     active: boolean;
     toggleActive: () => void;
 };
 
-const SectionDetails = () => {};
+const SectionDetails = () => {
+    return (
+        <div className="flex flex-col p-5">
+            <div className="flex">
+                <span className="">
+                    <b>CRN: 51834</b>
+                    <button className="px-2">
+                        <FontAwesomeIcon icon={faCopy}></FontAwesomeIcon>
+                    </button>
+                </span>
+                <span className="mx-5">
+                    <b>Section: 010</b>
+                </span>
+                <span className="mx-5">
+                    <b>Enrollment: 0/105</b>
+                </span>
+                <span className="ml-5">
+                    <b>Waitlist: 3/5</b>
+                </span>
+            </div>
+            <div className="mt-5 flex flex-col">
+                <span>
+                    Samaneh Yourdkhani
+                    <a
+                        href="https://www.ratemyprofessors.com/professor/2673409"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="px-5 text-blue-700 underline"
+                    >
+                        (Rate My Professor)
+                    </a>
+                </span>
+                <span className="mt-2">
+                    <b>2.8/5</b>
+                    <span className="px-3">based on 23 ratings</span>
+                </span>
+            </div>
+        </div>
+    );
+};
 
 const Panel = ({ active, toggleActive }: PanelProps) => {
     const rotation = active ? "rotate-90" : "rotate-0";
-    const hide = active ? "max-h-20" : "max-h-0";
+    const hide = active ? "max-h-40" : "max-h-0";
     return (
         <>
             <button
@@ -22,17 +61,18 @@ const Panel = ({ active, toggleActive }: PanelProps) => {
             >
                 <FontAwesomeIcon
                     icon={faArrowRight}
-                    className={"transition duration-150 " + rotation}
+                    className={"transition duration-300 " + rotation}
                 ></FontAwesomeIcon>
-                <span className="px-4">MTW Lecture</span>
+                <b className="px-5">Lecture</b>
+                <span className="px-5">MWF 11-11:50am</span>
+                <span className="px-5">Kidder Hall 350</span>
             </button>
             <div
                 className={
-                    "transition-max-height overflow-clip duration-200 " + hide
+                    "overflow-clip transition-max-height duration-200 " + hide
                 }
             >
-                <div>test</div>
-                <div>meow</div>
+                <SectionDetails />
             </div>
         </>
     );
