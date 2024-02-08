@@ -8,7 +8,6 @@ const isFulfilled = <T>(
 
 export default class ScheduleController {
     static async createSchedule(req: Request, res: Response): Promise<void> {
-        console.log(req.body);
         try {
             const courseIds: number[] = req.body.courses;
             const courses = await Promise.allSettled(

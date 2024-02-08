@@ -1,3 +1,4 @@
+import { DeepRequired } from "utility-types";
 import {
     Course,
     Offering,
@@ -6,25 +7,9 @@ import {
     Timestamp,
 } from "../shared.types";
 
-type SectionEvent = {
-    crn: number;
-    courseId: number;
-    courseCode: string;
-    courseTitle: string;
-    type: string;
-    professor: string;
-    professorAvgRating: number;
-    timerange: string;
-    start: number;
-    length: number;
-};
-
-type Schedule = Fitness & {
-    monday: SectionEvent[];
-    tuesday: SectionEvent[];
-    wednesday: SectionEvent[];
-    thursday: SectionEvent[];
-    friday: SectionEvent[];
+type SchedulerResult = {
+    sectionToCourse: Record<number, number>;
+    schedules: ScoredSections[];
 };
 
 type SchedulerWeights = {
@@ -46,6 +31,11 @@ type Fitness = {
     timePreferencePenalty: number;
 };
 
+type FitnessFunction = (
+    sections: DeepRequired<Section[]>,
+    config: SchedulerWeights
+) => Fitness;
+
 type ScoredSections = Fitness & {
     sections: Section[];
 };
@@ -65,89 +55,63 @@ export class Scheduler {
     };
 
     public static findSchedules(
-        catalog: Course[],
+        catalog: DeepRequired<Course>[],
         options?: Partial<SchedulerWeights>
-    ): Schedule[] {
+    ): SchedulerResult {
         const config = { ...this.defaultWeights, ...(options || {}) };
-        const queue: ScoredSections[] = [];
+        const queue: Section[][] = [];
 
-        for (const possibleSchedule of this.generateCourseSections(catalog)) {
-            queue.push({
-                sections: possibleSchedule,
-                ...this.evaluateFitness(possibleSchedule, config),
-            });
-        }
+        console.time("tabu");
 
-        const crnToEvent: Record<string, SectionEvent> = {};
+        this.tabuSearch(catalog, config);
+
+        console.timeEnd("tabu");
+
+        return {
+            sectionToCourse: [], // CRN -> Course Index
+            schedules: [],
+        };
+    }
+
+    public static tabuSearch(
+        catalog: DeepRequired<Course>[],
+        options: Partial<SchedulerWeights>
+    ): void {
+        const sectionToCourse: Record<string, DeepRequired<Course>> = {};
+        const sectionToOffering: Record<string, DeepRequired<Offering>> = {};
         catalog.forEach((course) => {
-            course.offerings.forEach((offering) => {
-                offering.forEach((sectionType) => {
-                    sectionType.sections.forEach((section) => {
-                        crnToEvent[section.crn] = {
-                            crn: section.crn,
-                            courseId: course.id,
-                            courseCode: course.code,
-                            courseTitle: course.title,
-                            type: sectionType.name,
-                            timerange: this.stampsToRange(
-                                section.start,
-                                section.end
-                            ),
-                            start: section.start.hours,
-                            length:
-                                (this.stampValue(section.end) -
-                                    this.stampValue(section.start)) /
-                                60,
-                            professor: section.instructorName || "Staff",
-                            professorAvgRating:
-                                section.instructorAvgRating || 2.5,
-                        };
-                    });
-                });
-            });
+            for (const offering of course.offerings) {
+                for (const sectionType of offering) {
+                    for (const section of sectionType.sections) {
+                        sectionToCourse[section.crn] = course;
+                        sectionToOffering[section.crn] = offering;
+                    }
+                }
+            }
         });
 
-        const schedules = queue
-            .sort((a, b) => {
-                return (
-                    b.professorScore +
-                    b.overlapPenalty +
-                    b.timePreferencePenalty -
-                    (a.professorScore +
-                        a.overlapPenalty +
-                        a.timePreferencePenalty)
-                );
-            })
-            .slice(0, 200)
-            .map((scoredSections) => {
-                const schedule: Schedule = {
-                    monday: [],
-                    tuesday: [],
-                    wednesday: [],
-                    thursday: [],
-                    friday: [],
-                    ...scoredSections,
-                };
-                scoredSections.sections.forEach((section) => {
-                    if (section.onMonday)
-                        schedule.monday.push(crnToEvent[section.crn]);
-                    if (section.onTuesday)
-                        schedule.tuesday.push(crnToEvent[section.crn]);
-                    if (section.onWednesday)
-                        schedule.wednesday.push(crnToEvent[section.crn]);
-                    if (section.onThursday)
-                        schedule.thursday.push(crnToEvent[section.crn]);
-                    if (section.onFriday)
-                        schedule.friday.push(crnToEvent[section.crn]);
-                });
-                return schedule;
-            });
+        const iterations = 5000;
+        const maxTabusize = 100;
+        const generator = this.generateCourseSections(catalog);
+        let canidate: DeepRequired<Section>[] = generator.next().value;
 
-        return schedules;
+        for (let i = 0; i < 100000; i++) {
+            const neighbors = Array.from(
+                this.generateNeighbors(
+                    catalog,
+                    canidate,
+                    sectionToCourse,
+                    sectionToOffering
+                )
+            );
+
+            canidate = neighbors[5];
+        }
+        console.log(canidate);
     }
 
     private static evaluateFitness(
-        schedule: Section[],
+        schedule: DeepRequired<Section>[],
         config: SchedulerWeights
     ): Fitness {
         let fitness: Fitness = {
@@ -220,15 +184,15 @@ export class Scheduler {
     }
 
     private static sectionFitness(
-        section: Section,
+        section: DeepRequired<Section>,
         config: SchedulerWeights
     ): number {
-        if (!section.instructorRatings) {
+        if (section.professor.num_ratings == 0) {
             return 0;
         }
         const fitness =
-            ((section.instructorAvgRating || 2.5) - 2.5) *
-            Math.log10(section.instructorRatings || 0) *
+            ((section.professor.avg_rating || 2.5) - 2.5) *
+            Math.log10(section.professor.num_ratings || 1) *
             config.teacherRatingWeight;
         return fitness;
     }
@@ -263,10 +227,10 @@ export class Scheduler {
     }
 
     public static *generateCourseSections(
-        catalog: Course[],
+        catalog: DeepRequired<Course[]>,
         index: number = 0,
-        partialSchedule: Section[] = []
-    ): Generator<Section[]> {
+        partialSchedule: DeepRequired<Section>[] = []
+    ): Generator<DeepRequired<Section>[]> {
         if (index == catalog.length) {
             yield partialSchedule;
         } else {
@@ -282,10 +246,10 @@ export class Scheduler {
     }
 
     private static *generateSections(
-        offering: Offering,
+        offering: DeepRequired<Offering>,
         index: number = 0,
-        partialSections: Section[] = []
-    ): Generator<Section[]> {
+        partialSections: DeepRequired<Section[]> = []
+    ): Generator<DeepRequired<Section[]>> {
         if (index == offering.length) {
             yield partialSections;
         } else {
@@ -295,6 +259,36 @@ export class Scheduler {
                     section,
                 ]);
             }
+        }
+    }
+
+    public static *generateNeighbors(
+        courses: DeepRequired<Course>[],
+        schedule: DeepRequired<Section>[],
+        sectionToCourse: Record<string, DeepRequired<Course>>,
+        sectionToOffering: Record<string, DeepRequired<Offering>>
+    ): Generator<DeepRequired<Section[]>> {
+        let scheduleIndex = 0;
+        while (scheduleIndex < schedule.length) {
+            let offering: DeepRequired<Offering> =
+                sectionToOffering[schedule[scheduleIndex].crn];
+
+            const newSchedule = [...schedule];
+            newSchedule.splice(scheduleIndex, offering.length);
+            if (Math.random() < 0.2) {
+                const course = sectionToCourse[schedule[scheduleIndex].crn];
+                const numOfferings = course.offerings.length;
+                offering =
+                    course.offerings[Math.floor(Math.random() * numOfferings)];
+            }
+            for (const possibleSections of this.generateSections(offering)) {
+                const tempSchedule = [...newSchedule];
+                for (const section of possibleSections) {
+                    tempSchedule.splice(scheduleIndex, 0, section);
+                }
+                yield tempSchedule;
+            }
+            scheduleIndex += offering.length;
         }
     }
 
