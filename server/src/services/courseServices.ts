@@ -55,9 +55,9 @@ export default class CourseServices {
                     if (professorId == null) {
                         professorId = await ProfServices.insertProf({
                             name: section.professor.name,
-                            avg_rating: 0,
-                            avg_difficulty: 0,
-                            num_ratings: 0,
+                            avgRating: 0,
+                            avgDifficulty: 0,
+                            numRatings: 0,
                         });
                     }
                     const sectionSql = `INSERT INTO section(section_type_id, crn, section_num, current_enrollment, max_enrollment, current_waitlist, max_waitlist, location, start_time, end_time, on_monday, on_tuesday, on_wednesday, on_thursday, on_friday, professor_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
@@ -157,10 +157,10 @@ export default class CourseServices {
 						'onThursday', section.on_thursday,
 						'onFriday', section.on_friday,
 						'professor', JSONB_BUILD_OBJECT(
-							'instructorName', professor.name,
-							'instructorAvgRating', professor.avg_rating,
-							'instructorAvgDifficulty', professor.avg_difficulty,
-							'instructorRatings', professor.num_ratings
+							'name', professor.name,
+							'avgRating', professor.avg_rating,
+							'avgDifficulty', professor.avg_difficulty,
+							'numRatings', professor.num_ratings
 						)
 					)) AS sections
 				FROM course

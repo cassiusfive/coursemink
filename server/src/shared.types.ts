@@ -24,9 +24,9 @@ export type TimeRange = {
 
 export type Professor = {
     name: string;
-    avg_rating?: number;
-    avg_difficulty?: number;
-    num_ratings?: number;
+    avgRating?: number;
+    avgDifficulty?: number;
+    numRatings?: number;
 };
 
 export type Section = {
