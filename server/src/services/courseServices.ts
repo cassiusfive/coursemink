@@ -115,7 +115,7 @@ export default class CourseServices {
         const courseInfo = await CourseServices.getCourseInfo(id);
         const now = new Date();
         // 360000
-        if (now.getTime() - courseInfo.updated_at.getTime() > 0) {
+        if (now.getTime() - courseInfo.updated_at.getTime() > 360000) {
             const course = await scraper.scrapeCourse(
                 courseInfo.code,
                 courseInfo.title

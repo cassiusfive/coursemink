@@ -10,6 +10,7 @@ import { PriorityQueue, ICompare } from "@datastructures-js/priority-queue";
 
 import { xxHash32 } from "js-xxhash";
 import { off } from "process";
+import scheduleRouter from "../routes/v1/schedules";
 
 type SchedulerWeights = {
     // Hard constraints
@@ -40,9 +41,11 @@ type ScoredSchedule = {
     fitness: number;
 };
 
+type FlatSection = Section & { courseId: number; type: string };
+
 type SchedulerResult = {
-    sectionToCourse: Record<number, number>;
-    schedules: ScoredSchedule[];
+    sections: Record<string, FlatSection[]>;
+    schedules: string[][]; // List of schedules including CRNS
 };
 
 export class Scheduler {
@@ -66,25 +69,37 @@ export class Scheduler {
         const config = { ...this.defaultWeights, ...(options || {}) };
         const queue: Section[][] = [];
 
-        console.time("tabu");
-        this.tabuSearch(catalog, config);
-        console.timeEnd("tabu");
+        const sections: Record<string, FlatSection[]> = {};
+        catalog.forEach((course) => {
+            course.offerings.forEach((offering) => {
+                offering.forEach((sectionType) => {
+                    sectionType.sections.forEach((section) => {
+                        if (!sections[section.crn]) sections[section.crn] = [];
+                        sections[section.crn].push({
+                            ...section,
+                            courseId: course.id,
+                            type: sectionType.name,
+                        });
+                    });
+                });
+            });
+        });
 
         console.time("stochastic");
-        this.stochasticSearch(catalog, config);
+        const schedules = this.stochasticSearch(catalog, config);
         console.timeEnd("stochastic");
 
         return {
-            sectionToCourse: [], // CRN -> Course Index
-            schedules: [],
+            sections: sections,
+            schedules: schedules,
         };
     }
 
     public static stochasticSearch(
         catalog: DeepRequired<Course>[],
         config: SchedulerWeights
-    ): void {
-        const iterations = 10000;
+    ): string[][] {
+        const iterations = 40000;
         const compareSchedules: ICompare<ScoredSchedule> = (a, b) => {
             if (a.fitness < b.fitness) {
                 return 1;
@@ -101,7 +116,13 @@ export class Scheduler {
                 fitness: this.fitness(sections, config),
             });
         }
-        console.log(scheduleQueue.front().fitness);
+        let res: string[][] = [];
+        while (!scheduleQueue.isEmpty() && res.length <= 200) {
+            res.push(
+                scheduleQueue.pop().sections.map((section) => section.crn)
+            );
+        }
+        return res;
     }
 
     public static tabuSearch(

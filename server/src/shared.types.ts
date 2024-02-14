@@ -31,7 +31,7 @@ export type Professor = {
 
 export type Section = {
     id?: number;
-    crn: number;
+    crn: string;
     sectionNum: string;
     start: Timestamp;
     end: Timestamp;
