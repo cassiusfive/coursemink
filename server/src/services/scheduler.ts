@@ -44,7 +44,7 @@ type ScoredSchedule = {
 type FlatSection = Section & { courseId: number; type: string };
 
 type SchedulerResult = {
-    sections: Record<string, FlatSection[]>;
+    sections: Record<string, FlatSection>;
     schedules: string[][]; // List of schedules including CRNS
 };
 
@@ -69,17 +69,16 @@ export class Scheduler {
         const config = { ...this.defaultWeights, ...(options || {}) };
         const queue: Section[][] = [];
 
-        const sections: Record<string, FlatSection[]> = {};
+        const sections: Record<string, FlatSection> = {};
         catalog.forEach((course) => {
             course.offerings.forEach((offering) => {
                 offering.forEach((sectionType) => {
                     sectionType.sections.forEach((section) => {
-                        if (!sections[section.crn]) sections[section.crn] = [];
-                        sections[section.crn].push({
+                        sections[section.crn] = {
                             ...section,
                             courseId: course.id,
                             type: sectionType.name,
-                        });
+                        };
                     });
                 });
             });
@@ -117,10 +116,14 @@ export class Scheduler {
             });
         }
         let res: string[][] = [];
-        while (!scheduleQueue.isEmpty() && res.length <= 200) {
-            res.push(
-                scheduleQueue.pop().sections.map((section) => section.crn)
-            );
+        let hashSet: Set<number> = new Set();
+        while (!scheduleQueue.isEmpty() && res.length < 200) {
+            const topSchedule = scheduleQueue
+                .pop()
+                .sections.map((section) => section.crn);
+            const hash = this.hashStringSet(topSchedule);
+            if (!hashSet.has(hash)) res.push(topSchedule);
+            hashSet.add(hash);
         }
         return res;
     }
@@ -205,6 +208,14 @@ export class Scheduler {
         let hash = 0;
         for (const section of schedule) {
             hash ^= xxHash32(Buffer.from(section.crn.toString(), "utf-8"));
+        }
+        return hash;
+    }
+
+    private static hashStringSet(strs: string[]): number {
+        let hash = 0;
+        for (const str of strs) {
+            hash ^= xxHash32(Buffer.from(str.toString(), "utf-8"));
         }
         return hash;
     }

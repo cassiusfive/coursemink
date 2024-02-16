@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { Schedule } from "../pages/ScheduleTool";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faCopy } from "@fortawesome/free-solid-svg-icons";
 
@@ -78,11 +77,11 @@ const Panel = ({ active, toggleActive }: PanelProps) => {
     );
 };
 
-type AccordionProps = {
-    schedule: Schedule;
-};
+// type AccordionProps = {
+//     schedule: Schedule;
+// };
 
-const ScheduleAccordion = ({ schedule }: AccordionProps) => {
+const ScheduleAccordion = () => {
     const [activePanels, setActivePanels] = useState<boolean[]>([
         false,
         true,

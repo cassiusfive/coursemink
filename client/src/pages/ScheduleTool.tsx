@@ -14,29 +14,29 @@ import {
     faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
+import { Section } from "../shared.types";
+import { WeekEvent } from "../components/WeeklySchedule";
 
-export type SectionEvent = {
-    crn: number;
-    courseId: number;
-    courseCode: string;
-    courseTitle: string;
-    type: string;
-    professor: string;
-    professorAvgRating: number;
-    timerange: string;
-    start: number;
-    length: number;
+type SectionEventProps = {
+    section: Section;
 };
 
-export type Schedule = {
-    monday: SectionEvent[];
-    tuesday: SectionEvent[];
-    wednesday: SectionEvent[];
-    thursday: SectionEvent[];
-    friday: SectionEvent[];
-    professorScore?: number;
-    overlapPenalty?: number;
-    timePreferencePenalty?: number;
+const SectionEvent = ({ section }: SectionEventProps) => {
+    const height =
+        100 *
+        (section.end.hours +
+            section.end.minutes / 60 -
+            (section.start.hours + section.start.minutes / 60));
+    return (
+        <div
+            className="h-full bg-red-400"
+            style={{
+                height: `${height}%`,
+            }}
+        >
+            Testing
+        </div>
+    );
 };
 
 const ScheduleTool = () => {
@@ -58,23 +58,25 @@ const ScheduleTool = () => {
         {}
     );
 
-    const INITIAL_DATA: Schedule[] = [
-        {
-            monday: [],
-            tuesday: [],
-            wednesday: [],
-            thursday: [],
-            friday: [],
-            professorScore: 0,
-            overlapPenalty: 0,
-            timePreferencePenalty: 0,
-        },
-    ];
-
-    const [schedules, setSchedules] = useState<Schedule[]>(INITIAL_DATA);
+    const [sections, setSections] = useState<Record<string, Section>>({});
+    const [schedules, setSchedules] = useState<string[][]>([]);
     const [scheduleIndex, setScheduleIndex] = useState<number>(0);
     let isInit = false;
-    const currentSchedule = schedules[scheduleIndex];
+    const currentSchedule = schedules[scheduleIndex] || [];
+    const events: WeekEvent[] = currentSchedule.map((crn) => {
+        const section = sections[crn];
+        return {
+            start: section.start,
+            onMonday: section.onMonday,
+            onTuesday: section.onTuesday,
+            onWednesday: section.onWednesday,
+            onThursday: section.onThursday,
+            onFriday: section.onFriday,
+            children: <SectionEvent section={section} />,
+        };
+    });
+
+    console.log(events);
 
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
@@ -91,10 +93,10 @@ const ScheduleTool = () => {
                 }
             );
             if (res.ok) {
-                const schedulesData: Schedule[] = await res.json();
-                setSchedules(schedulesData);
-                if (schedulesData.length > 1)
-                    setSavedSchedules([0, schedulesData.length - 1]);
+                const json = await res.json();
+                console.log(json);
+                setSchedules(json.schedules);
+                setSections(json.sections);
             }
         };
 
@@ -147,8 +149,8 @@ const ScheduleTool = () => {
                                 x
                             </button>
                         </div>
-                        <div className="p-5">
-                            <ScheduleAccordion schedule={currentSchedule} />
+                        <div className="overflow-y-scroll p-5">
+                            <ScheduleAccordion />
                         </div>
                     </div>
                 </Modal>
@@ -175,7 +177,7 @@ const ScheduleTool = () => {
                 })}
             </header>
             <div className="my-28 px-10">
-                <WeeklySchedule colors={colors} schedule={currentSchedule} />
+                <WeeklySchedule events={events} />
             </div>
             <footer className="fixed bottom-0 z-40 flex min-h-20 w-dvw justify-between bg-neutral-800 px-5 align-middle">
                 <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
