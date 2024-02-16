@@ -1,26 +1,38 @@
-export interface Course {
-    id: number;
+export type Course = {
+    id?: number;
     title: string;
     code: string;
     offerings: Offering[];
-}
+};
 
 export type Offering = SectionType[];
 
-export interface SectionType {
+export type SectionType = {
     name: string;
     sections: Section[];
-}
+};
 
-export interface Section {
-    crn: number;
-    credits: number;
-    maxEnrollment: number;
-    enrollment: number;
-    instructorName?: string;
-    instructorAvgRating?: number;
-    instructorAvgDifficulty?: number;
-    instructorRatings?: number;
+export type Timestamp = {
+    hours: number;
+    minutes: number;
+};
+
+export type TimeRange = {
+    start: Timestamp;
+    end: Timestamp;
+};
+
+export type Professor = {
+    name: string;
+    avgRating?: number;
+    avgDifficulty?: number;
+    numRatings?: number;
+};
+
+export type Section = {
+    id?: number;
+    crn: string;
+    sectionNum: string;
     start: Timestamp;
     end: Timestamp;
     onMonday: boolean;
@@ -28,22 +40,10 @@ export interface Section {
     onWednesday: boolean;
     onThursday: boolean;
     onFriday: boolean;
-}
-
-export interface Timestamp {
-    hours: number;
-    minutes: number;
-}
-
-export interface TimeRange {
-    start: Timestamp;
-    end: Timestamp;
-}
-
-export interface Professor {
-    name: string;
-    email: string;
-    avg_rating: number;
-    avg_difficulty: number;
-    num_ratings: number;
-}
+    location: string;
+    currentEnrollment: number;
+    maxEnrollment: number;
+    currentWaitlist: number;
+    maxWaitlist: number;
+    professor: Professor;
+};

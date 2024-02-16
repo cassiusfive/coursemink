@@ -1,3 +1,4 @@
+import { DeepRequired } from "utility-types";
 import {
     Course,
     Offering,
@@ -5,27 +6,11 @@ import {
     TimeRange,
     Timestamp,
 } from "../shared.types";
+import { PriorityQueue, ICompare } from "@datastructures-js/priority-queue";
 
-type SectionEvent = {
-    crn: number;
-    courseId: number;
-    courseCode: string;
-    courseTitle: string;
-    type: string;
-    professor: string;
-    professorAvgRating: number;
-    timerange: string;
-    start: number;
-    length: number;
-};
-
-type Schedule = Fitness & {
-    monday: SectionEvent[];
-    tuesday: SectionEvent[];
-    wednesday: SectionEvent[];
-    thursday: SectionEvent[];
-    friday: SectionEvent[];
-};
+import { xxHash32 } from "js-xxhash";
+import { off } from "process";
+import scheduleRouter from "../routes/v1/schedules";
 
 type SchedulerWeights = {
     // Hard constraints
@@ -46,8 +31,21 @@ type Fitness = {
     timePreferencePenalty: number;
 };
 
-type ScoredSections = Fitness & {
-    sections: Section[];
+type FitnessFunction = (
+    sections: DeepRequired<Section[]>,
+    config: SchedulerWeights
+) => Fitness;
+
+type ScoredSchedule = {
+    sections: DeepRequired<Section>[];
+    fitness: number;
+};
+
+type FlatSection = Section & { courseId: number; type: string };
+
+type SchedulerResult = {
+    sections: Record<string, FlatSection[]>;
+    schedules: string[][]; // List of schedules including CRNS
 };
 
 export class Scheduler {
@@ -65,89 +63,166 @@ export class Scheduler {
     };
 
     public static findSchedules(
-        catalog: Course[],
+        catalog: DeepRequired<Course>[],
         options?: Partial<SchedulerWeights>
-    ): Schedule[] {
+    ): SchedulerResult {
         const config = { ...this.defaultWeights, ...(options || {}) };
-        const queue: ScoredSections[] = [];
+        const queue: Section[][] = [];
 
-        for (const possibleSchedule of this.generateCourseSections(catalog)) {
-            queue.push({
-                sections: possibleSchedule,
-                ...this.evaluateFitness(possibleSchedule, config),
-            });
-        }
-
-        const crnToEvent: Record<string, SectionEvent> = {};
+        const sections: Record<string, FlatSection[]> = {};
         catalog.forEach((course) => {
             course.offerings.forEach((offering) => {
                 offering.forEach((sectionType) => {
                     sectionType.sections.forEach((section) => {
-                        crnToEvent[section.crn] = {
-                            crn: section.crn,
+                        if (!sections[section.crn]) sections[section.crn] = [];
+                        sections[section.crn].push({
+                            ...section,
                             courseId: course.id,
-                            courseCode: course.code,
-                            courseTitle: course.title,
                             type: sectionType.name,
-                            timerange: this.stampsToRange(
-                                section.start,
-                                section.end
-                            ),
-                            start: section.start.hours,
-                            length:
-                                (this.stampValue(section.end) -
-                                    this.stampValue(section.start)) /
-                                60,
-                            professor: section.instructorName || "Staff",
-                            professorAvgRating:
-                                section.instructorAvgRating || 2.5,
-                        };
+                        });
                     });
                 });
             });
         });
 
-        const schedules = queue
-            .sort((a, b) => {
-                return (
-                    b.professorScore +
-                    b.overlapPenalty +
-                    b.timePreferencePenalty -
-                    (a.professorScore +
-                        a.overlapPenalty +
-                        a.timePreferencePenalty)
-                );
-            })
-            .slice(0, 200)
-            .map((scoredSections) => {
-                const schedule: Schedule = {
-                    monday: [],
-                    tuesday: [],
-                    wednesday: [],
-                    thursday: [],
-                    friday: [],
-                    ...scoredSections,
-                };
-                scoredSections.sections.forEach((section) => {
-                    if (section.onMonday)
-                        schedule.monday.push(crnToEvent[section.crn]);
-                    if (section.onTuesday)
-                        schedule.tuesday.push(crnToEvent[section.crn]);
-                    if (section.onWednesday)
-                        schedule.wednesday.push(crnToEvent[section.crn]);
-                    if (section.onThursday)
-                        schedule.thursday.push(crnToEvent[section.crn]);
-                    if (section.onFriday)
-                        schedule.friday.push(crnToEvent[section.crn]);
-                });
-                return schedule;
-            });
+        console.time("stochastic");
+        const schedules = this.stochasticSearch(catalog, config);
+        console.timeEnd("stochastic");
 
-        return schedules;
+        return {
+            sections: sections,
+            schedules: schedules,
+        };
+    }
+
+    public static stochasticSearch(
+        catalog: DeepRequired<Course>[],
+        config: SchedulerWeights
+    ): string[][] {
+        const iterations = 40000;
+        const compareSchedules: ICompare<ScoredSchedule> = (a, b) => {
+            if (a.fitness < b.fitness) {
+                return 1;
+            }
+            return -1;
+        };
+        const scheduleQueue = new PriorityQueue<ScoredSchedule>(
+            compareSchedules
+        );
+        for (let i = 0; i < iterations; i++) {
+            const sections = this.randomSchedule(catalog);
+            scheduleQueue.push({
+                sections: sections,
+                fitness: this.fitness(sections, config),
+            });
+        }
+        let res: string[][] = [];
+        while (!scheduleQueue.isEmpty() && res.length <= 200) {
+            res.push(
+                scheduleQueue.pop().sections.map((section) => section.crn)
+            );
+        }
+        return res;
+    }
+
+    public static tabuSearch(
+        catalog: DeepRequired<Course>[],
+        config: SchedulerWeights
+    ): void {
+        const sectionToCourse: Record<string, DeepRequired<Course>> = {};
+        const sectionToOffering: Record<string, DeepRequired<Offering>> = {};
+        catalog.forEach((course) => {
+            for (const offering of course.offerings) {
+                for (const sectionType of offering) {
+                    for (const section of sectionType.sections) {
+                        sectionToCourse[section.crn] = course;
+                        sectionToOffering[section.crn] = offering;
+                    }
+                }
+            }
+        });
+
+        const compareSchedules: ICompare<ScoredSchedule> = (a, b) => {
+            if (a.fitness < b.fitness) {
+                return 1;
+            }
+            return -1;
+        };
+
+        const iterations = 1000;
+        const maxTabuSize = 30;
+        const scheduleQueue = new PriorityQueue<ScoredSchedule>(
+            compareSchedules
+        );
+        let tabuHashList: number[] = [];
+
+        for (let i = 0; i < 1; i++) {
+            const sections = this.randomSchedule(catalog);
+            scheduleQueue.push({
+                sections: sections,
+                fitness: this.fitness(sections, config),
+            });
+        }
+
+        let bestCandidate = scheduleQueue.front();
+
+        for (let i = 0; i < iterations; i++) {
+            let highestFitness = Number.NEGATIVE_INFINITY;
+            for (const canidate of Array.from(
+                this.generateNeighbors(
+                    bestCandidate.sections,
+                    sectionToCourse,
+                    sectionToOffering
+                )
+            ).map((schedule) => {
+                return {
+                    sections: schedule,
+                    fitness: this.fitness(schedule, config),
+                };
+            })) {
+                if (
+                    !tabuHashList.includes(
+                        this.hashSchedule(canidate.sections)
+                    ) &&
+                    canidate.fitness > highestFitness
+                ) {
+                    bestCandidate = canidate;
+                }
+            }
+            scheduleQueue.push(bestCandidate);
+            tabuHashList.push(this.hashSchedule(bestCandidate.sections));
+            if (tabuHashList.length > maxTabuSize) {
+                tabuHashList.shift();
+            }
+        }
+        console.log(scheduleQueue.front().fitness);
+        // console.log(bestSchedule);
+        // console.log(this.evaluateFitness(bestSchedule, config));
+        // console.log(iterations);
+    }
+
+    private static hashSchedule(schedule: DeepRequired<Section>[]): number {
+        let hash = 0;
+        for (const section of schedule) {
+            hash ^= xxHash32(Buffer.from(section.crn.toString(), "utf-8"));
+        }
+        return hash;
+    }
+
+    private static fitness(
+        schedule: DeepRequired<Section>[],
+        config: SchedulerWeights
+    ): number {
+        const fitness = this.evaluateFitness(schedule, config);
+        return (
+            fitness.professorScore +
+            fitness.overlapPenalty +
+            fitness.timePreferencePenalty
+        );
     }
 
     private static evaluateFitness(
-        schedule: Section[],
+        schedule: DeepRequired<Section>[],
         config: SchedulerWeights
     ): Fitness {
         let fitness: Fitness = {
@@ -220,15 +295,15 @@ export class Scheduler {
     }
 
     private static sectionFitness(
-        section: Section,
+        section: DeepRequired<Section>,
         config: SchedulerWeights
     ): number {
-        if (!section.instructorRatings) {
+        if (section.professor.numRatings == 0) {
             return 0;
         }
         const fitness =
-            ((section.instructorAvgRating || 2.5) - 2.5) *
-            Math.log10(section.instructorRatings || 0) *
+            ((section.professor.avgRating || 2.5) - 2.5) *
+            Math.log10(section.professor.numRatings || 1) *
             config.teacherRatingWeight;
         return fitness;
     }
@@ -263,10 +338,10 @@ export class Scheduler {
     }
 
     public static *generateCourseSections(
-        catalog: Course[],
+        catalog: DeepRequired<Course[]>,
         index: number = 0,
-        partialSchedule: Section[] = []
-    ): Generator<Section[]> {
+        partialSchedule: DeepRequired<Section>[] = []
+    ): Generator<DeepRequired<Section>[]> {
         if (index == catalog.length) {
             yield partialSchedule;
         } else {
@@ -282,10 +357,10 @@ export class Scheduler {
     }
 
     private static *generateSections(
-        offering: Offering,
+        offering: DeepRequired<Offering>,
         index: number = 0,
-        partialSections: Section[] = []
-    ): Generator<Section[]> {
+        partialSections: DeepRequired<Section[]> = []
+    ): Generator<DeepRequired<Section[]>> {
         if (index == offering.length) {
             yield partialSections;
         } else {
@@ -296,6 +371,55 @@ export class Scheduler {
                 ]);
             }
         }
+    }
+
+    public static *generateNeighbors(
+        schedule: DeepRequired<Section>[],
+        sectionToCourse: Record<string, DeepRequired<Course>>,
+        sectionToOffering: Record<string, DeepRequired<Offering>>
+    ): Generator<DeepRequired<Section[]>> {
+        let scheduleIndex = 0;
+        while (scheduleIndex < schedule.length) {
+            let offering: DeepRequired<Offering> =
+                sectionToOffering[schedule[scheduleIndex].crn];
+
+            const newSchedule = [...schedule];
+            newSchedule.splice(scheduleIndex, offering.length);
+            if (Math.random() < 0.5) {
+                const course = sectionToCourse[schedule[scheduleIndex].crn];
+                const numOfferings = course.offerings.length;
+                offering =
+                    course.offerings[Math.floor(Math.random() * numOfferings)];
+            }
+            for (const possibleSections of this.generateSections(offering)) {
+                const tempSchedule = [...newSchedule];
+                for (const section of possibleSections) {
+                    tempSchedule.splice(scheduleIndex, 0, section);
+                }
+                yield tempSchedule;
+            }
+            scheduleIndex += offering.length;
+        }
+    }
+
+    public static randomSchedule(
+        catalog: DeepRequired<Course>[]
+    ): DeepRequired<Section>[] {
+        const schedule: DeepRequired<Section>[] = [];
+        for (const course of catalog) {
+            const offering =
+                course.offerings[
+                    Math.floor(Math.random() * course.offerings.length)
+                ];
+            for (const sectionType of offering) {
+                schedule.push(
+                    sectionType.sections[
+                        Math.floor(Math.random() * sectionType.sections.length)
+                    ]
+                );
+            }
+        }
+        return schedule;
     }
 
     private static stampsToRange(start: Timestamp, end: Timestamp) {

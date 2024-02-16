@@ -1,17 +1,19 @@
 import pool from "../utils/database.js";
 import scraper from "./scraper.js";
-import { Course, Timestamp } from "../shared.types.js";
+import ProfServices from "./profServices.js";
+import { Course, Professor, Timestamp } from "../shared.types.js";
+import { DeepRequired } from "utility-types";
 
-interface CourseInfo {
+type CourseInfo = {
     id: number;
     title: string;
     code: string;
     updated_at: Date;
-}
+};
 
 export default class CourseServices {
     static async insertCourse(
-        course: Partial<Course>,
+        course: Course,
         courseId?: number
     ): Promise<void> {
         const now = new Date();
@@ -46,20 +48,30 @@ export default class CourseServices {
                 );
                 for (const section of sectionType.sections) {
                     const nameFuzzyRes = await pool.query(
-                        "SELECT id FROM professor ORDER BY SIMILARITY(name, $1) DESC LIMIT 1",
-                        [section.instructorName]
+                        "SELECT id, name FROM professor WHERE SIMILARITY(name, $1) > 0.6 ORDER BY SIMILARITY(name, $1) DESC LIMIT 1",
+                        [section.professor.name]
                     );
-                    const sectionSql =
-                        'INSERT INTO section(section_type_id, crn, credits, "maxEnrollment", professor_id, enrollment, "start", "end", "onMonday", "onTuesday", "onWednesday", "onThursday", "onFriday") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)';
+                    let professorId = nameFuzzyRes.rows[0]?.id;
+                    if (professorId == null) {
+                        professorId = await ProfServices.insertProf({
+                            name: section.professor.name,
+                            avgRating: 0,
+                            avgDifficulty: 0,
+                            numRatings: 0,
+                        });
+                    }
+                    const sectionSql = `INSERT INTO section(section_type_id, crn, section_num, current_enrollment, max_enrollment, current_waitlist, max_waitlist, location, start_time, end_time, on_monday, on_tuesday, on_wednesday, on_thursday, on_friday, professor_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
                     const startTime = `${section.start.hours}:${section.start.minutes}`;
                     const endTime = `${section.end.hours}:${section.end.minutes}`;
                     const sectionValues = [
                         sectionTypeRes.rows[0].id,
                         section.crn,
-                        section.credits,
+                        section.sectionNum,
+                        section.currentEnrollment,
                         section.maxEnrollment,
-                        nameFuzzyRes.rows[0].id,
-                        section.enrollment,
+                        section.currentWaitlist,
+                        section.maxWaitlist,
+                        section.location,
                         startTime,
                         endTime,
                         section.onMonday,
@@ -67,6 +79,7 @@ export default class CourseServices {
                         section.onWednesday,
                         section.onThursday,
                         section.onFriday,
+                        professorId,
                     ];
                     await pool.query(sectionSql, sectionValues);
                 }
@@ -78,7 +91,6 @@ export default class CourseServices {
         const res = await pool.query(`
 		SELECT id, title, code FROM course
 		`);
-
         return res.rows;
     }
 
@@ -99,9 +111,10 @@ export default class CourseServices {
         return res.rows[0].data;
     }
 
-    static async getCourse(id: number): Promise<Course> {
+    static async getCourse(id: number): Promise<DeepRequired<Course>> {
         const courseInfo = await CourseServices.getCourseInfo(id);
         const now = new Date();
+        // 360000
         if (now.getTime() - courseInfo.updated_at.getTime() > 360000) {
             const course = await scraper.scrapeCourse(
                 courseInfo.code,
@@ -128,21 +141,27 @@ export default class CourseServices {
 					course.code AS course_code,
 					section_type.offering_id AS id, section_type.name AS name,
 					JSONB_AGG(JSONB_BUILD_OBJECT(
+						'id', section.id,
 						'crn', section.crn,
-						'credits', section.credits,
-						'instructorName', professor.name,
-						'instructorAvgRating', professor.avg_rating,
-						'instructorAvgDifficulty', professor.avg_difficulty,
-						'instructorRatings', professor.num_ratings,
-						'maxEnrollment', section."maxEnrollment",
-						'enrollment', section.enrollment,
-						'start', section.start,
-						'end', section.end,
-						'onMonday', section."onMonday",
-						'onTuesday', section."onTuesday",
-						'onWednesday', section."onWednesday",
-						'onThursday', section."onThursday",
-						'onFriday', section."onFriday"
+						'sectionNum', section.section_num,
+						'currentEnrollment', section.current_enrollment,
+						'maxEnrollment', section.max_enrollment,
+						'currentWaitlist', section.current_waitlist,
+						'maxWaitlist', section.max_waitlist,
+						'location', section.location,
+						'start', section.start_time,
+						'end', section.end_time,
+						'onMonday', section.on_monday,
+						'onTuesday', section.on_tuesday,
+						'onWednesday', section.on_wednesday,
+						'onThursday', section.on_thursday,
+						'onFriday', section.on_friday,
+						'professor', JSONB_BUILD_OBJECT(
+							'name', professor.name,
+							'avgRating', professor.avg_rating,
+							'avgDifficulty', professor.avg_difficulty,
+							'numRatings', professor.num_ratings
+						)
 					)) AS sections
 				FROM course
 				INNER JOIN offering ON course.id = offering.course_id

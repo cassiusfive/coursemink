@@ -7,6 +7,9 @@ import {
     Professor,
     Timestamp,
 } from "../shared.types";
+import { DeepRequired } from "utility-types";
+import pkg from "he";
+const { decode } = pkg;
 
 class RegistrationScraper {
     private axiosInstance = axios.create({
@@ -157,11 +160,11 @@ class RegistrationScraper {
         return profs;
     }
 
-    public async scrapeEmptyCourses(): Promise<Partial<Course>[]> {
+    public async scrapeEmptyCourses(): Promise<Course[]> {
         const cookies = await this.setTerm(202403);
 
         let set: Set<String> = new Set();
-        let courseList: Partial<Course>[] = [];
+        let courseList: Course[] = [];
 
         const initialSearch = await this.axiosInstance.get(
             "searchResults/searchResults",
@@ -182,15 +185,15 @@ class RegistrationScraper {
         const totalCourses: number = initialSearch.data.totalCount;
 
         initialSearch.data.data.forEach((courseData: any) => {
-            const course: Partial<Course> = {
-                title: courseData.courseTitle,
+            const course: Course = {
+                title: decode(courseData.courseTitle),
                 code: courseData.subjectCourse,
                 offerings: [],
             };
-            if (!set.has(course.code! + course.title!)) {
+            if (!set.has(course.code || "" + course.title || "")) {
                 courseList.push(course);
             }
-            set.add(course.code! + course.title!);
+            set.add(course.code || "" + course.title || "");
         });
 
         while (coursesSearched < totalCourses) {
@@ -211,25 +214,22 @@ class RegistrationScraper {
             coursesSearched += 500;
 
             search.data.data.forEach((courseData: any) => {
-                const course: Partial<Course> = {
-                    title: courseData.courseTitle,
+                const course: Course = {
+                    title: decode(courseData.courseTitle),
                     code: courseData.subjectCourse,
                     offerings: [],
                 };
                 if (!set.has(course.code || "" + course.title || "")) {
                     courseList.push(course);
                 }
-                set.add(course.code! + course.title!);
+                set.add(course.code || "" + course.title || "");
             });
         }
 
         return courseList;
     }
 
-    public async scrapeCourse(
-        code: string,
-        title: string
-    ): Promise<Partial<Course>> {
+    public async scrapeCourse(code: string, title: string): Promise<Course> {
         const cookies = await this.setTerm(202403);
 
         const [subjectCode, courseNumber] = code
@@ -260,24 +260,24 @@ class RegistrationScraper {
         );
     }
 
-    private normalizeCourseData(data: any): Partial<Course> {
+    private normalizeCourseData(data: any): Course {
         if (!data) {
             throw new Error("No data provided");
         }
-
         data = data.filter((rawSection: any) => {
             const excludedAttributes = ["HNRS"];
             const excludedTypes = ["Examination for Credit"];
-            if (rawSection?.faculty.length < 1) {
-                return false;
-            }
+            // if (rawSection?.faculty.length < 1) {
+            //     return false;
+            // }
             if (rawSection?.meetingsFaculty.length < 1) {
                 return false;
             }
             if (
                 rawSection.sectionAttributes?.some((attribute: any) =>
                     excludedAttributes.includes(attribute.code)
-                )
+                ) ||
+                excludedTypes.includes(rawSection.scheduleTypeDescription)
             ) {
                 return false;
             }
@@ -288,8 +288,8 @@ class RegistrationScraper {
             throw new Error("Course has no valid offerings");
         }
 
-        const course: Partial<Course> = {
-            title: data[0].courseTitle,
+        const course: Course = {
+            title: decode(data[0].courseTitle),
             code: data[0].subject + data[0].courseNumber,
             offerings: [],
         };
@@ -304,27 +304,34 @@ class RegistrationScraper {
             if (!linkedGroups[linker][section.scheduleTypeDescription]) {
                 linkedGroups[linker][section.scheduleTypeDescription] = [];
             }
+            const meetInfo = section.meetingsFaculty[0].meetingTime;
+            const instructorName =
+                section.faculty.length > 0
+                    ? this.normalizeName(
+                          section.faculty.find(
+                              (faculty: any) => faculty.primaryIndicator
+                          ).displayName
+                      )
+                    : "Staff";
+
             linkedGroups[linker][section.scheduleTypeDescription].push({
                 crn: section.courseReferenceNumber,
-                credits: section.creditHours || 1,
+                sectionNum: section.sequenceNumber,
                 maxEnrollment: section.maximumEnrollment,
-                enrollment: section.enrollment,
-                instructorName: this.normalizeName(
-                    section.faculty.find(
-                        (faculty: any) => faculty.primaryIndicator
-                    )?.displayName || "staff"
-                ),
-                start: this.parseTime(
-                    section.meetingsFaculty[0].meetingTime.beginTime
-                ),
-                end: this.parseTime(
-                    section.meetingsFaculty[0].meetingTime.endTime
-                ),
-                onMonday: section.meetingsFaculty[0].meetingTime.monday,
-                onTuesday: section.meetingsFaculty[0].meetingTime.tuesday,
-                onWednesday: section.meetingsFaculty[0].meetingTime.thursday,
-                onThursday: section.meetingsFaculty[0].meetingTime.wednesday,
-                onFriday: section.meetingsFaculty[0].meetingTime.friday,
+                currentEnrollment: section.enrollment,
+                maxWaitlist: section.waitCapacity,
+                currentWaitlist: section.waitCount,
+                start: this.parseTime(meetInfo.beginTime),
+                end: this.parseTime(meetInfo.endTime),
+                onMonday: meetInfo.monday,
+                onTuesday: meetInfo.tuesday,
+                onWednesday: meetInfo.thursday,
+                onThursday: meetInfo.wednesday,
+                onFriday: meetInfo.friday,
+                location: meetInfo.buildingDescription + " " + meetInfo.room,
+                professor: {
+                    name: instructorName,
+                },
             });
         }
 

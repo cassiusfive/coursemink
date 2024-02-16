@@ -8,12 +8,13 @@ const isFulfilled = <T>(
 
 export default class ScheduleController {
     static async createSchedule(req: Request, res: Response): Promise<void> {
-        console.log(req.body);
         try {
             const courseIds: number[] = req.body.courses;
+            console.time("Scrape");
             const courses = await Promise.allSettled(
                 courseIds.map((id) => CourseServices.getCourse(id))
             );
+            console.timeEnd("Scrape");
             const schedules = Scheduler.findSchedules(
                 courses.filter(isFulfilled).map((res) => res.value)
             );
