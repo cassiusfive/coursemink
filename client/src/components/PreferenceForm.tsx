@@ -14,8 +14,6 @@ const PreferenceForm = ({
     prefEnd,
     updateFields,
 }: PreferenceFormProps) => {
-    console.log(prefStart);
-    console.log(prefEnd);
     return (
         <>
             <FormWrapper title="When do you want your classes?">

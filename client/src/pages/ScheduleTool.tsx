@@ -19,9 +19,11 @@ import { WeekEvent } from "../components/WeeklySchedule";
 
 type SectionEventProps = {
     section: Section;
+    code: string;
+    colorMap: Record<number, string>;
 };
 
-const SectionEvent = ({ section }: SectionEventProps) => {
+const SectionEvent = ({ section, code, colorMap }: SectionEventProps) => {
     const height =
         100 *
         (section.end.hours +
@@ -29,12 +31,17 @@ const SectionEvent = ({ section }: SectionEventProps) => {
             (section.start.hours + section.start.minutes / 60));
     return (
         <div
-            className="h-full bg-red-400"
+            className="absolute z-10 flex w-full flex-col justify-between text-nowrap rounded-md px-1.5 text-white"
             style={{
                 height: `${height}%`,
+                backgroundColor: colorMap[section.courseId],
             }}
         >
-            Testing
+            <div className="flex justify-between">
+                <b>{code}</b>
+                <span className="collapse lg:visible">{section.type}</span>
+            </div>
+            <div>{section.professor.name}</div>
         </div>
     );
 };
@@ -43,11 +50,12 @@ const ScheduleTool = () => {
     const data: FormData = useLocation().state;
 
     const colorbank: string[] = [
-        "bg-red-500 hover:bg-red-700",
-        "bg-cyan-500 hover:bg-cyan-700",
-        "bg-green-500 hover:bg-green-700",
-        "bg-purple-500 hover:bg-purple-700",
-        "bg-orange-500 hover:bg-orange-700",
+        "#BF3B53",
+        "#1D3973",
+        "#0FBFBF",
+        "#F2AE2E",
+        "#F28241",
+        "#2c4c3b",
     ];
 
     const colors: Record<number, string> = data.courses.reduce(
@@ -65,6 +73,10 @@ const ScheduleTool = () => {
     const currentSchedule = schedules[scheduleIndex] || [];
     const events: WeekEvent[] = currentSchedule.map((crn) => {
         const section = sections[crn];
+        const code = data.courses.find(
+            (course) => course.id == +section.courseId
+        )?.code;
+
         return {
             start: section.start,
             onMonday: section.onMonday,
@@ -72,11 +84,15 @@ const ScheduleTool = () => {
             onWednesday: section.onWednesday,
             onThursday: section.onThursday,
             onFriday: section.onFriday,
-            children: <SectionEvent section={section} />,
+            children: (
+                <SectionEvent
+                    section={section}
+                    code={code || ""}
+                    colorMap={colors}
+                />
+            ),
         };
     });
-
-    console.log(events);
 
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
@@ -94,7 +110,6 @@ const ScheduleTool = () => {
             );
             if (res.ok) {
                 const json = await res.json();
-                console.log(json);
                 setSchedules(json.schedules);
                 setSections(json.sections);
             }
@@ -140,7 +155,7 @@ const ScheduleTool = () => {
             {infoActive && (
                 <Modal>
                     <div className="flex h-[calc(100%-14rem)] w-9/12 flex-col rounded-md bg-white">
-                        <div className="flex bg-stone-700 p-4 text-white">
+                        <div className="flex bg-stone-500 p-4 text-white">
                             <span className="grow">Schedule Details</span>
                             <button
                                 className="px-4"
@@ -150,12 +165,17 @@ const ScheduleTool = () => {
                             </button>
                         </div>
                         <div className="overflow-y-scroll p-5">
-                            <ScheduleAccordion />
+                            <ScheduleAccordion
+                                schedule={currentSchedule.map(
+                                    (crn) => sections[crn]
+                                )}
+                                courses={data.courses}
+                            />
                         </div>
                     </div>
                 </Modal>
             )}
-            <header className="justify-left fixed top-0 z-40 flex min-h-20 w-full items-center bg-neutral-800 px-5 align-middle text-white">
+            <header className="justify-left fixed top-0 z-40 flex min-h-20 w-full items-center bg-stone-500 px-5 align-middle text-white">
                 <span className="px-5">
                     <b>
                         {savedSchedules.length
@@ -166,7 +186,7 @@ const ScheduleTool = () => {
                 {savedSchedules.map((id) => {
                     return (
                         <button
-                            className="px-5 py-2 text-2xl  underline hover:text-yellow-300"
+                            className="px-5 py-2 text-2xl underline hover:text-yellow-300"
                             onClick={() => {
                                 setScheduleIndex(id);
                             }}
@@ -179,8 +199,8 @@ const ScheduleTool = () => {
             <div className="my-28 px-10">
                 <WeeklySchedule events={events} />
             </div>
-            <footer className="fixed bottom-0 z-40 flex min-h-20 w-dvw justify-between bg-neutral-800 px-5 align-middle">
-                <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl text-white">
+            <footer className=" fixed bottom-0 z-40 flex min-h-20 w-dvw justify-between bg-stone-500 px-5 align-middle text-white">
+                <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl ">
                     <b className="">
                         {scheduleIndex + 1} / {schedules.length}
                     </b>
@@ -188,7 +208,7 @@ const ScheduleTool = () => {
                 <div className="flex shrink grow basis-0 items-stretch justify-center">
                     <button
                         className={
-                            "mr-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
+                            "mr-5 px-2  transition duration-200 hover:scale-125 active:scale-90 " +
                             (scheduleIndex === 0 ? "invisible" : "")
                         }
                         onClick={() => back()}
@@ -197,7 +217,7 @@ const ScheduleTool = () => {
                     </button>
                     <button
                         className={
-                            "ml-5 px-2 text-white transition duration-200 hover:scale-125 active:scale-90 " +
+                            "ml-5 px-2  transition duration-200 hover:scale-125 active:scale-90 " +
                             (scheduleIndex === schedules.length - 1
                                 ? "invisible"
                                 : "")
@@ -207,17 +227,17 @@ const ScheduleTool = () => {
                         <FontAwesomeIcon icon={faForward} size="3x" />
                     </button>
                 </div>
-                <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl text-white">
+                <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl ">
                     <button
                         className="px-5 transition duration-200 hover:scale-125 active:scale-90"
-                        style={{ color: infoActive ? "#93C5FD" : "" }}
+                        style={{ color: infoActive ? "#7DD3FC" : "" }}
                         onClick={() => setInfoActive(!infoActive)}
                     >
                         <FontAwesomeIcon icon={faInfoCircle} />
                     </button>
                     <button
                         className="px-5 transition duration-200 hover:scale-125 active:scale-90"
-                        style={{ color: scheduleSaved ? "#FDE047" : "" }}
+                        style={{ color: scheduleSaved ? "#FACC15" : "" }}
                         onClick={() => toggleSaved()}
                     >
                         <FontAwesomeIcon

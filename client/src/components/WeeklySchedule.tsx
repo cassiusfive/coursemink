@@ -103,7 +103,7 @@ type EventColumnProps = {
 const EventColumn = ({ events }: EventColumnProps) => {
     return (
         <ul className="h-full w-full">
-            <div className="relative top-0 z-10 box-border flex h-full w-full flex-col justify-between">
+            <div className="relative top-0 flex h-full w-full flex-col justify-between">
                 {[...Array(ENDHOUR - STARTHOUR).keys()].map((i) => {
                     const section = events.find((section) => {
                         return section.start.hours === STARTHOUR + i;
@@ -111,7 +111,7 @@ const EventColumn = ({ events }: EventColumnProps) => {
                     return (
                         <div
                             key={i}
-                            className="relative box-border h-full min-h-16 w-full flex-grow basis-0 border-b"
+                            className="relative h-full min-h-16 w-full flex-grow basis-0 border-b"
                         >
                             {section?.children}
                         </div>

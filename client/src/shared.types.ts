@@ -28,6 +28,8 @@ export type Section = {
     currentWaitlist: number;
     maxWaitlist: number;
     professor: Professor;
+    courseId: number;
+    type: string;
 };
 
 export type ProfessorDetails = {

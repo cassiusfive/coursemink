@@ -50,7 +50,7 @@ type SchedulerResult = {
 
 export class Scheduler {
     public static defaultWeights: SchedulerWeights = {
-        overlapPenalty: -500, // Filter schedule defects
+        overlapPenalty: -1000, // Filter schedule defects
 
         preferredStartTime: { hours: 10, minutes: 0 }, // 10:00am
         preferredEndTime: { hours: 14, minutes: 0 }, // 4:00pm
@@ -117,6 +117,7 @@ export class Scheduler {
         }
         let res: string[][] = [];
         let hashSet: Set<number> = new Set();
+        console.log(scheduleQueue);
         while (!scheduleQueue.isEmpty() && res.length < 200) {
             const topSchedule = scheduleQueue
                 .pop()
@@ -329,7 +330,7 @@ export class Scheduler {
 
     private static timeConflict(daySchedule: TimeRange[]): boolean {
         daySchedule.sort(
-            (a, b) => this.stampValue(a.start) - this.stampValue(b.end)
+            (a, b) => this.stampValue(a.start) - this.stampValue(b.start)
         );
         for (let i = 1; i < daySchedule.length; i++) {
             const a = daySchedule[i - 1];

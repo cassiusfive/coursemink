@@ -3,10 +3,7 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faCopy } from "@fortawesome/free-solid-svg-icons";
 
-type PanelProps = {
-    active: boolean;
-    toggleActive: () => void;
-};
+import { Course, Section } from "../shared.types";
 
 const SectionDetails = () => {
     return (
@@ -49,6 +46,11 @@ const SectionDetails = () => {
     );
 };
 
+type PanelProps = {
+    active: boolean;
+    toggleActive: () => void;
+};
+
 const Panel = ({ active, toggleActive }: PanelProps) => {
     const rotation = active ? "rotate-90" : "rotate-0";
     const hide = active ? "max-h-40" : "max-h-0";
@@ -77,11 +79,14 @@ const Panel = ({ active, toggleActive }: PanelProps) => {
     );
 };
 
-// type AccordionProps = {
-//     schedule: Schedule;
-// };
+type AccordionProps = {
+    courses: Course[];
+    schedule: Section[];
+};
 
-const ScheduleAccordion = () => {
+const ScheduleAccordion = ({ courses, schedule }: AccordionProps) => {
+    const cor = courses;
+    const sl = schedule;
     const [activePanels, setActivePanels] = useState<boolean[]>([
         false,
         true,
@@ -90,7 +95,6 @@ const ScheduleAccordion = () => {
     ]);
 
     const togglePanel = (index: number) => {
-        console.log(activePanels[index]);
         setActivePanels((prev) => {
             const newActivePanels = [...prev];
             newActivePanels[index] = !newActivePanels[index];
