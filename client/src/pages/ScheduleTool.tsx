@@ -40,7 +40,9 @@ const SectionEvent = ({ section, code, colorMap }: SectionEventProps) => {
         >
             <div className="flex justify-between">
                 <b>{code}</b>
-                <span className="collapse lg:visible">{section.type}</span>
+                <span className="collapse lg:visible">
+                    {section.type.split(" ")[0]}
+                </span>
             </div>
             <div>{section.professor.name}</div>
         </div>

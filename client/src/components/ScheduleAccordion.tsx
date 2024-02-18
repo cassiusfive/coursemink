@@ -1,7 +1,8 @@
 import { useState } from "react";
 
+import { Tooltip } from "react-tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faClone } from "@fortawesome/free-solid-svg-icons";
 
 import { Course, Professor, Section, Timestamp } from "../shared.types";
 
@@ -70,6 +71,40 @@ const InstructorDetails = ({ instructor }: InstructorDetailsProps) => {
     );
 };
 
+type CopyButtonProps = {
+    content: string;
+    message?: string;
+};
+
+const CopyButton = ({ content, message }: CopyButtonProps) => {
+    const [tooltipText, setTooltipText] = useState<string>(
+        message || "Copy to Clipboard"
+    );
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(content);
+        setTooltipText("Copied!");
+    };
+
+    return (
+        <>
+            <button
+                className="px-2"
+                onClick={copyToClipboard}
+                data-tooltip-content={tooltipText}
+                data-tooltip-id="copyCrn"
+            >
+                <FontAwesomeIcon icon={faClone} />
+            </button>
+            <Tooltip
+                id="copyCrn"
+                opacity={0.7}
+                afterHide={() => setTooltipText(message || "Copy to Clipboard")}
+            />
+        </>
+    );
+};
+
 type PanelDetailsProps = {
     section: Section;
 };
@@ -80,10 +115,8 @@ const PanelDetails = ({ section }: PanelDetailsProps) => {
             <div className="flex">
                 <span className="">
                     <b>CRN: {section.crn}</b>
-                    <button className="px-2">
-                        <FontAwesomeIcon icon={faCopy}></FontAwesomeIcon>
-                    </button>
                 </span>
+                <CopyButton content={section.crn} />
                 <span className="mx-5">
                     <b>Section: {section.sectionNum}</b>
                 </span>
@@ -126,9 +159,15 @@ const Panel = ({ section, active, toggleActive }: PanelProps) => {
                     icon={faArrowRight}
                     className={"transition duration-200 " + rotation}
                 ></FontAwesomeIcon>
-                <b className="px-5">{section.type}</b>
-                <span className="px-5">{sectionTimeString(section)}</span>
-                <span className="px-5">{section.location}</span>
+                <div className="flex w-full items-center text-left">
+                    <b className=" min-w-32 px-5">
+                        {section.type.split(" ")[0]}
+                    </b>
+                    <span className="min-w-40 px-5">
+                        {sectionTimeString(section)}
+                    </span>
+                    <span className="px-5">{section.location}</span>
+                </div>
             </button>
             <div
                 className={
