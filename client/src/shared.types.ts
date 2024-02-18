@@ -6,9 +6,9 @@ export type Course = {
 
 export type Professor = {
     name: string;
-    avgRating?: number;
-    avgDifficulty?: number;
-    numRatings?: number;
+    avgRating: number;
+    avgDifficulty: number;
+    numRatings: number;
 };
 
 export type Section = {

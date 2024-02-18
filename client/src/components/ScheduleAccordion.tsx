@@ -3,57 +3,119 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faCopy } from "@fortawesome/free-solid-svg-icons";
 
-import { Course, Section } from "../shared.types";
+import { Course, Professor, Section, Timestamp } from "../shared.types";
 
-const SectionDetails = () => {
+const timeString = (start: Timestamp, end: Timestamp) => {
+    let res = "";
+    res += start.hours.toString();
+    if (start.minutes) res += ":" + start.minutes.toString().padStart(2, "0");
+    res += "-";
+    res += start.hours.toString();
+    if (end.minutes) res += ":" + end.minutes.toString().padStart(2, "0");
+    res += end.hours < 12 ? "am" : "pm";
+    return res;
+};
+
+const sectionTimeString = (section: Section) => {
+    let res = "";
+    if (section.onMonday) res += "M";
+    if (section.onTuesday) res += "W";
+    if (section.onWednesday) res += "T";
+    if (section.onThursday) res += "R";
+    if (section.onFriday) res += "F";
+    res += " ";
+    section.start;
+    return res + timeString(section.start, section.end);
+};
+
+type CourseSpacerProps = {
+    course: Course;
+    color: string;
+};
+
+const CourseSpacer = ({ course, color }: CourseSpacerProps) => {
+    return (
+        <div
+            className="flex flex-col p-3 text-white"
+            style={{ backgroundColor: color }}
+        >
+            <b>
+                {course.code}: {course.title}
+            </b>
+        </div>
+    );
+};
+
+type InstructorDetailsProps = {
+    instructor: Professor;
+};
+
+const InstructorDetails = ({ instructor }: InstructorDetailsProps) => {
+    if (instructor.name == "Staff") {
+        return <>No instructor assigned</>;
+    }
+
+    return (
+        <>
+            <div className="flex">
+                <span>{instructor.name}</span>
+                <span className="mx-5">
+                    <b>{instructor.avgRating}/5</b>
+                    {"  based on "}
+                    <b>{instructor.numRatings}</b>{" "}
+                    {instructor.numRatings > 1 ? "ratings" : "rating"}
+                </span>
+            </div>
+        </>
+    );
+};
+
+type PanelDetailsProps = {
+    section: Section;
+};
+
+const PanelDetails = ({ section }: PanelDetailsProps) => {
     return (
         <div className="flex flex-col p-5">
             <div className="flex">
                 <span className="">
-                    <b>CRN: 51834</b>
+                    <b>CRN: {section.crn}</b>
                     <button className="px-2">
                         <FontAwesomeIcon icon={faCopy}></FontAwesomeIcon>
                     </button>
                 </span>
                 <span className="mx-5">
-                    <b>Section: 010</b>
+                    <b>Section: {section.sectionNum}</b>
                 </span>
                 <span className="mx-5">
-                    <b>Enrollment: 0/105</b>
+                    <b>
+                        Enrollment: {section.currentEnrollment}/
+                        {section.maxEnrollment}
+                    </b>
                 </span>
                 <span className="ml-5">
-                    <b>Waitlist: 3/5</b>
+                    <b>
+                        Waitlist: {section.currentWaitlist}/
+                        {section.maxWaitlist}
+                    </b>
                 </span>
             </div>
             <div className="mt-5 flex flex-col">
-                <span>
-                    Samaneh Yourdkhani
-                    <a
-                        href="https://www.ratemyprofessors.com/professor/2673409"
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="px-5 text-blue-700 underline"
-                    >
-                        (Rate My Professor)
-                    </a>
-                </span>
-                <span className="mt-2">
-                    <b>2.8/5</b>
-                    <span className="px-3">based on 23 ratings</span>
-                </span>
+                <InstructorDetails instructor={section.professor} />
             </div>
         </div>
     );
 };
 
 type PanelProps = {
+    section: Section;
     active: boolean;
     toggleActive: () => void;
 };
 
-const Panel = ({ active, toggleActive }: PanelProps) => {
+const Panel = ({ section, active, toggleActive }: PanelProps) => {
     const rotation = active ? "rotate-90" : "rotate-0";
-    const hide = active ? "max-h-40" : "max-h-0";
+    const hide = active ? "max-h-[10rem]" : "max-h-0";
     return (
         <>
             <button
@@ -62,18 +124,18 @@ const Panel = ({ active, toggleActive }: PanelProps) => {
             >
                 <FontAwesomeIcon
                     icon={faArrowRight}
-                    className={"transition duration-300 " + rotation}
+                    className={"transition duration-200 " + rotation}
                 ></FontAwesomeIcon>
-                <b className="px-5">Lecture</b>
-                <span className="px-5">MWF 11-11:50am</span>
-                <span className="px-5">Kidder Hall 350</span>
+                <b className="px-5">{section.type}</b>
+                <span className="px-5">{sectionTimeString(section)}</span>
+                <span className="px-5">{section.location}</span>
             </button>
             <div
                 className={
-                    "overflow-clip transition-max-height duration-200 " + hide
+                    "overflow-clip transition-max-height duration-300 " + hide
                 }
             >
-                <SectionDetails />
+                <PanelDetails section={section} />
             </div>
         </>
     );
@@ -82,56 +144,50 @@ const Panel = ({ active, toggleActive }: PanelProps) => {
 type AccordionProps = {
     courses: Course[];
     schedule: Section[];
+    colorMap: Record<number, string>;
 };
 
-const ScheduleAccordion = ({ courses, schedule }: AccordionProps) => {
-    const cor = courses;
-    const sl = schedule;
-    const [activePanels, setActivePanels] = useState<boolean[]>([
-        false,
-        true,
-        false,
-        false,
-    ]);
+const ScheduleAccordion = ({ courses, schedule, colorMap }: AccordionProps) => {
+    const [activeIndex, setActiveIndex] = useState<number>(1);
 
-    const togglePanel = (index: number) => {
-        setActivePanels((prev) => {
-            const newActivePanels = [...prev];
-            newActivePanels[index] = !newActivePanels[index];
-            return newActivePanels;
-        });
+    const toggleActive = (index: number) => {
+        if (index == activeIndex) {
+            setActiveIndex(-1);
+        } else {
+            setActiveIndex(index);
+        }
     };
 
-    return (
-        <>
-            <div className="flex flex-col bg-red-500 p-3 text-white">
-                <b>MTH231: ELEMENTS OF DISCRETE MATHEMATICS</b>
-            </div>
-            <Panel
-                active={activePanels[0]}
-                toggleActive={() => togglePanel(0)}
-            />
-            <Panel
-                active={activePanels[1]}
-                toggleActive={() => togglePanel(1)}
-            />
-            <div className="flex flex-col bg-cyan-500 p-3 text-white">
-                <b>ENGR103: ENGINEERING COMPUTATION AND ALGORITHMIC THINKING</b>
-            </div>
-            <Panel
-                active={activePanels[2]}
-                toggleActive={() => togglePanel(2)}
-            />
-            <div className="flex flex-col bg-green-500 p-3 text-white">
-                <b>WR121Z: COMPOSITION I</b>
-            </div>
-            <div className="flex flex-col bg-purple-500 p-3 text-white">
-                <b>CS162: INTRODUCTION TO COMPUTER SCIENCE II</b>
-            </div>
-            <div className="flex flex-col bg-orange-500 p-3 text-white">
-                <b>WR121Z: ENGLISH COMPOSITION</b>
-            </div>
-        </>
-    );
+    let i = 0;
+    const accordionItems = courses.flatMap((course) => {
+        const panels = schedule
+            .filter((section) => section.courseId == course.id)
+            .sort((a, b) => b.maxEnrollment - a.maxEnrollment)
+            .map((section) => {
+                const index = i++;
+                const panel = (
+                    <Panel
+                        key={section.crn}
+                        section={section}
+                        active={index == activeIndex}
+                        toggleActive={() => toggleActive(index)}
+                    />
+                );
+                i++;
+                return panel;
+            });
+        return (
+            <>
+                <CourseSpacer
+                    course={course}
+                    color={colorMap[+course.id]}
+                    key={course.code}
+                />
+                {panels}
+            </>
+        );
+    });
+
+    return accordionItems;
 };
 export default ScheduleAccordion;

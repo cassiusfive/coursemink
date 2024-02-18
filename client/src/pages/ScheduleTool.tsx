@@ -12,6 +12,7 @@ import {
     faBackward,
     faBookmark,
     faInfoCircle,
+    faX,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
 import { Section } from "../shared.types";
@@ -155,13 +156,15 @@ const ScheduleTool = () => {
             {infoActive && (
                 <Modal>
                     <div className="flex h-[calc(100%-14rem)] w-9/12 flex-col rounded-md bg-white">
-                        <div className="flex bg-stone-500 p-4 text-white">
-                            <span className="grow">Schedule Details</span>
+                        <div className="flex items-center bg-stone-500 px-6 text-white">
+                            <span className="grow">
+                                <b>Schedule Details</b>
+                            </span>
                             <button
-                                className="px-4"
+                                className="p-3"
                                 onClick={() => setInfoActive(false)}
                             >
-                                x
+                                <FontAwesomeIcon icon={faX} />
                             </button>
                         </div>
                         <div className="overflow-y-scroll p-5">
@@ -170,6 +173,7 @@ const ScheduleTool = () => {
                                     (crn) => sections[crn]
                                 )}
                                 courses={data.courses}
+                                colorMap={colors}
                             />
                         </div>
                     </div>
