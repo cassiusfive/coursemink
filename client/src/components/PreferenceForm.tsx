@@ -9,11 +9,7 @@ type PreferenceFormProps = PreferenceData & {
     updateFields: (fields: Partial<PreferenceData>) => void;
 };
 
-const PreferenceForm = ({
-    prefStart,
-    prefEnd,
-    updateFields,
-}: PreferenceFormProps) => {
+const PreferenceForm = ({ prefStart, updateFields }: PreferenceFormProps) => {
     return (
         <>
             <FormWrapper title="When do you want your classes?">
