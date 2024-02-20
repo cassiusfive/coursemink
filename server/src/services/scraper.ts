@@ -325,8 +325,8 @@ class RegistrationScraper {
                 end: this.parseTime(meetInfo.endTime),
                 onMonday: meetInfo.monday,
                 onTuesday: meetInfo.tuesday,
-                onWednesday: meetInfo.thursday,
-                onThursday: meetInfo.wednesday,
+                onWednesday: meetInfo.wednesday,
+                onThursday: meetInfo.thursday,
                 onFriday: meetInfo.friday,
                 location: meetInfo.buildingDescription + " " + meetInfo.room,
                 professor: {

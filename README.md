@@ -93,4 +93,4 @@ If you have any questions about the project or just wanna chat, feel free to rea
 
 Cassius V - cassiusfive@gmail.com
 
-\****psssstt***\* *If you're an OSU student, let's do some hackathons*
+\***_psssstt_**\* _If you're an OSU student, let's do some hackathons_
