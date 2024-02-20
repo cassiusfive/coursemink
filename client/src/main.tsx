@@ -19,10 +19,12 @@ const router = createBrowserRouter([
     {
         path: "schedule/form",
         element: <ScheduleForm />,
+        errorElement: <></>,
     },
     {
         path: "schedule/tool",
         element: <ScheduleTool />,
+        errorElement: <></>,
     },
 ]);
 

@@ -43,6 +43,9 @@ const ScheduleForm = () => {
         if (data.courses.length == 0) {
             return alert("Select at least one course.");
         }
+        if (data.courses.length > 6) {
+            return alert("Too many courses selected.");
+        }
 
         if (!isLastStep) {
             return next();

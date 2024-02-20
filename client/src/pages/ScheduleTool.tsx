@@ -16,7 +16,7 @@ import {
     faX,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
-import { Section } from "../shared.types";
+import { Section, Timestamp } from "../shared.types";
 import { WeekEvent } from "../components/WeeklySchedule";
 
 type SectionEventProps = {
@@ -149,6 +149,10 @@ const ScheduleTool = () => {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set("Content-Type", "application/json");
         const fetchSchedules = async () => {
+            const prefStartTime: Timestamp = {
+                hours: +data.prefStart.slice(0, 2),
+                minutes: +data.prefStart.slice(3, 5),
+            };
             const res = await fetch(
                 import.meta.env.VITE_API_ENDPOINT + "/schedules",
                 {
@@ -156,6 +160,7 @@ const ScheduleTool = () => {
                     headers: requestHeaders,
                     body: JSON.stringify({
                         courses: data.courses.map((course) => course.id),
+                        options: { preferredStartTime: prefStartTime },
                     }),
                 }
             );

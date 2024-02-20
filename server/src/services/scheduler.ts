@@ -9,10 +9,8 @@ import {
 import { PriorityQueue, ICompare } from "@datastructures-js/priority-queue";
 
 import { xxHash32 } from "js-xxhash";
-import { off } from "process";
-import scheduleRouter from "../routes/v1/schedules";
 
-type SchedulerWeights = {
+export type SchedulerWeights = {
     // Hard constraints
     overlapPenalty: number;
 
@@ -53,7 +51,7 @@ export class Scheduler {
         overlapPenalty: -1000, // Filter schedule defects
 
         preferredStartTime: { hours: 10, minutes: 0 }, // 10:00am
-        preferredEndTime: { hours: 14, minutes: 0 }, // 4:00pm
+        preferredEndTime: { hours: 17, minutes: 0 }, // 5:00pm
         timePreferencePenalty: -50,
 
         timeCohesionPenalty: 0, // Minimize time between first and last class (per minute delta)
@@ -281,6 +279,8 @@ export class Scheduler {
             this.dayFitness(daySchedules[2]) +
             this.dayFitness(daySchedules[3]) +
             this.dayFitness(daySchedules[4]);
+
+        if (fitness.overlapPenalty > 100) return fitness;
 
         for (const daySchedule of daySchedules) {
             daySchedule.push({
