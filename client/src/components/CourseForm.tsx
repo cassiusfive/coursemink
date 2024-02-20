@@ -118,41 +118,43 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
                             addCourse={addCourse}
                         />
                     )}
-                    <table className="mt-8 w-full">
-                        <tbody>
-                            {courses.map((course) => {
-                                return (
-                                    <tr
-                                        key={course.id}
-                                        className="flex items-center justify-between py-1 group-hover:bg-slate-500"
-                                    >
-                                        <td className="flex">
-                                            <div className="inline-block min-w-20">
-                                                <b>{course.code}</b>
-                                            </div>
-                                            <div className="px-5">
-                                                {course.title}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 px-4 py-2 text-white hover:bg-red-700"
-                                                onClick={() =>
-                                                    removeCourse(course)
-                                                }
-                                            >
-                                                <FontAwesomeIcon
-                                                    icon={faXmark}
-                                                    size="1x"
-                                                />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                    {courses.length > 0 && (
+                        <table className="mt-8 w-full">
+                            <tbody>
+                                {courses.map((course) => {
+                                    return (
+                                        <tr
+                                            key={course.id}
+                                            className="flex items-center justify-between py-1 group-hover:bg-slate-500"
+                                        >
+                                            <td className="flex">
+                                                <div className="inline-block min-w-20">
+                                                    <b>{course.code}</b>
+                                                </div>
+                                                <div className="px-5">
+                                                    {course.title}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    type="button"
+                                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 px-4 py-2 text-white hover:bg-red-700"
+                                                    onClick={() =>
+                                                        removeCourse(course)
+                                                    }
+                                                >
+                                                    <FontAwesomeIcon
+                                                        icon={faXmark}
+                                                        size="1x"
+                                                    />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </FormWrapper>
         </>

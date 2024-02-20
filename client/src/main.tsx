@@ -8,12 +8,13 @@ import {
 
 import ScheduleForm from "./pages/ScheduleForm";
 import ScheduleTool from "./pages/ScheduleTool";
+import HomePage from "./pages/Home";
 
 const router = createBrowserRouter([
     {
         path: "/",
         index: true,
-        element: <Navigate to="schedule/form"></Navigate>,
+        element: <HomePage />,
     },
     {
         path: "schedule/form",

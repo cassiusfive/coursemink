@@ -121,3 +121,35 @@ const EventColumn = ({ events }: EventColumnProps) => {
         </ul>
     );
 };
+
+type SkeletonEventOptions = Omit<WeekEvent, "children"> & {
+    end: Timestamp;
+};
+
+export const SkeletonEvent = (params: SkeletonEventOptions): WeekEvent => {
+    const height =
+        100 *
+        (params.end.hours +
+            params.end.minutes / 60 -
+            (params.start.hours + params.start.minutes / 60));
+    const skeleton = (
+        <div
+            className="absolute z-10 flex w-full flex-col justify-between text-nowrap rounded-md bg-stone-500 p-2"
+            style={{
+                height: `${height}%`,
+            }}
+        >
+            <div className="flex animate-pulse justify-between ">
+                <div className="h-2.5 w-14 rounded-full bg-stone-300" />
+                <div className="h-2 w-14 rounded-full bg-stone-300" />
+            </div>
+            <div className="animate-pulse">
+                <div className="h-2 w-24 rounded-full bg-stone-300" />
+            </div>
+        </div>
+    );
+    return {
+        ...params,
+        children: skeleton,
+    };
+};

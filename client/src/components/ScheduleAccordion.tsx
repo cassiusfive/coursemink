@@ -227,6 +227,11 @@ const ScheduleAccordion = ({ courses, schedule, colorMap }: AccordionProps) => {
         );
     });
 
-    return accordionItems;
+    return (
+        <>
+            {accordionItems}
+            <div className="h-1 w-full bg-stone-500"></div>
+        </>
+    );
 };
 export default ScheduleAccordion;

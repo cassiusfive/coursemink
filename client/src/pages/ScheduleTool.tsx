@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import WeeklySchedule from "../components/WeeklySchedule";
 import Modal from "../components/Modal";
 import ScheduleAccordion from "../components/ScheduleAccordion";
+import { SkeletonEvent } from "../components/WeeklySchedule";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -96,6 +97,53 @@ const ScheduleTool = () => {
             ),
         };
     });
+
+    if (events.length == 0) {
+        events.push(
+            SkeletonEvent({
+                start: { hours: 10, minutes: 0 },
+                end: { hours: 10, minutes: 50 },
+                onMonday: true,
+                onTuesday: false,
+                onWednesday: true,
+                onThursday: false,
+                onFriday: true,
+            })
+        );
+        events.push(
+            SkeletonEvent({
+                start: { hours: 10, minutes: 0 },
+                end: { hours: 11, minutes: 50 },
+                onMonday: false,
+                onTuesday: true,
+                onWednesday: true,
+                onThursday: false,
+                onFriday: false,
+            })
+        );
+        events.push(
+            SkeletonEvent({
+                start: { hours: 12, minutes: 0 },
+                end: { hours: 12, minutes: 50 },
+                onMonday: false,
+                onTuesday: false,
+                onWednesday: false,
+                onThursday: true,
+                onFriday: false,
+            })
+        );
+        events.push(
+            SkeletonEvent({
+                start: { hours: 9, minutes: 0 },
+                end: { hours: 11, minutes: 20 },
+                onMonday: false,
+                onTuesday: false,
+                onWednesday: false,
+                onThursday: true,
+                onFriday: false,
+            })
+        );
+    }
 
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
@@ -215,7 +263,7 @@ const ScheduleTool = () => {
                     <button
                         className={
                             "mr-5 px-2  transition duration-200 hover:scale-125 active:scale-90 " +
-                            (scheduleIndex === 0 ? "invisible" : "")
+                            (scheduleIndex > 0 ? "" : "collapse")
                         }
                         onClick={() => back()}
                     >
@@ -224,9 +272,9 @@ const ScheduleTool = () => {
                     <button
                         className={
                             "ml-5 px-2  transition duration-200 hover:scale-125 active:scale-90 " +
-                            (scheduleIndex === schedules.length - 1
-                                ? "invisible"
-                                : "")
+                            (scheduleIndex < schedules.length - 1
+                                ? ""
+                                : "collapse")
                         }
                         onClick={() => next()}
                     >

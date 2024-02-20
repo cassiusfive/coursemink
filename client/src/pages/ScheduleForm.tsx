@@ -23,11 +23,13 @@ const INITIAL_DATA = {
 
 const ScheduleForm = () => {
     const [data, setData] = useState<FormData>(INITIAL_DATA);
+
     function updateFields(fields: Partial<FormData>) {
         setData((prev) => {
             return { ...prev, ...fields };
         });
     }
+
     const { step, next, back, isFirstStep, isLastStep } = useMultistepForm([
         <CourseForm {...data} updateFields={updateFields} />,
         <PreferenceForm {...data} updateFields={updateFields} />,
@@ -37,9 +39,15 @@ const ScheduleForm = () => {
 
     function onSubmit(e: FormEvent) {
         e.preventDefault();
+
+        if (data.courses.length == 0) {
+            return alert("Select at least one course.");
+        }
+
         if (!isLastStep) {
             return next();
         }
+
         navigate("/schedule/tool", { state: data });
     }
 

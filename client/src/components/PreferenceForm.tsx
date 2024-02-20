@@ -17,26 +17,18 @@ const PreferenceForm = ({
     return (
         <>
             <FormWrapper title="When do you want your classes?">
-                <div className="flex justify-center gap-10">
-                    <div className="text-2xl">
-                        <b>Start: </b>
-                        <input
-                            type="time"
-                            value={prefStart}
-                            onChange={(e) =>
-                                updateFields({ prefStart: e.target.value })
-                            }
-                        />
-                    </div>
-                    <div className="text-2xl">
-                        <b>End: </b>
-                        <input
-                            type="time"
-                            value={prefEnd}
-                            onChange={(e) =>
-                                updateFields({ prefEnd: e.target.value })
-                            }
-                        />
+                <div className="flex flex-col justify-center gap-10 text-xl">
+                    <div className="flex items-center gap-2">
+                        <b>Earliest class: </b>
+                        <div className="p-3">
+                            <input
+                                type="time"
+                                value={prefStart}
+                                onChange={(e) =>
+                                    updateFields({ prefStart: e.target.value })
+                                }
+                            />
+                        </div>
                     </div>
                 </div>
             </FormWrapper>
