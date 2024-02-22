@@ -20,6 +20,7 @@ export type SchedulerWeights = {
     timePreferencePenalty: number;
     timeCohesionPenalty: number;
     timeDispersionPenalty: number;
+    timeStartPenalty: number;
     teacherRatingWeight: number;
 };
 
@@ -48,14 +49,15 @@ type SchedulerResult = {
 
 export class Scheduler {
     public static defaultWeights: SchedulerWeights = {
-        overlapPenalty: -1000, // Filter schedule defects
+        overlapPenalty: -9999, // Filter schedule defects
 
         preferredStartTime: { hours: 10, minutes: 0 }, // 10:00am
         preferredEndTime: { hours: 17, minutes: 0 }, // 5:00pm
         timePreferencePenalty: -50,
 
-        timeCohesionPenalty: 0, // Minimize time between first and last class (per minute delta)
+        timeCohesionPenalty: -0.01, // Minimize time between first and last class
         timeDispersionPenalty: 0, // Minimize differences in class time (per minute delta)
+        timeStartPenalty: -0.04, // Minimize difference in week start times
 
         teacherRatingWeight: 10,
     };
@@ -82,9 +84,7 @@ export class Scheduler {
             });
         });
 
-        console.time("stochastic");
         const schedules = this.stochasticSearch(catalog, config);
-        console.timeEnd("stochastic");
 
         return {
             sections: sections,
@@ -115,8 +115,11 @@ export class Scheduler {
         }
         let res: string[][] = [];
         let hashSet: Set<number> = new Set();
-        console.log(scheduleQueue);
-        while (!scheduleQueue.isEmpty() && res.length < 200) {
+        while (
+            !scheduleQueue.isEmpty() &&
+            res.length < 200 &&
+            scheduleQueue.front().fitness > -8000
+        ) {
             const topSchedule = scheduleQueue
                 .pop()
                 .sections.map((section) => section.crn);
@@ -197,7 +200,6 @@ export class Scheduler {
                 tabuHashList.shift();
             }
         }
-        console.log(scheduleQueue.front().fitness);
         // console.log(bestSchedule);
         // console.log(this.evaluateFitness(bestSchedule, config));
         // console.log(iterations);
@@ -273,14 +275,48 @@ export class Scheduler {
             }
         }
 
-        fitness.overlapPenalty =
-            this.dayFitness(daySchedules[0]) +
-            this.dayFitness(daySchedules[1]) +
-            this.dayFitness(daySchedules[2]) +
-            this.dayFitness(daySchedules[3]) +
-            this.dayFitness(daySchedules[4]);
+        fitness.overlapPenalty +=
+            (this.dayFitness(daySchedules[0]) +
+                this.dayFitness(daySchedules[1]) +
+                this.dayFitness(daySchedules[2]) +
+                this.dayFitness(daySchedules[3]) +
+                this.dayFitness(daySchedules[4])) *
+            config.overlapPenalty;
 
-        if (fitness.overlapPenalty > 100) return fitness;
+        if (fitness.overlapPenalty < -100) return fitness;
+
+        const cohesion =
+            daySchedules.reduce((acc, daySchedule) => {
+                if (daySchedule.length > 0) {
+                    acc +=
+                        this.stampValue(
+                            daySchedule[daySchedule.length - 1].end
+                        ) - this.stampValue(daySchedule[0].start);
+                }
+                return acc;
+            }, 0) * config.timeCohesionPenalty;
+        fitness.timePreferencePenalty += cohesion;
+
+        let sum = 0;
+        let daysWithClass = 0;
+        daySchedules.forEach((daySchedule) => {
+            if (daySchedule.length > 0) {
+                sum += this.stampValue(daySchedule[0].start);
+                daysWithClass += 1;
+            }
+        }, 0);
+
+        const meanStartTime = sum / daysWithClass;
+        const startPenalty =
+            daySchedules.reduce((acc, daySchedule) => {
+                if (daySchedule.length > 0) {
+                    acc += Math.abs(
+                        this.stampValue(daySchedule[0].start) - meanStartTime
+                    );
+                }
+                return acc;
+            }, 0) * config.timeStartPenalty;
+        fitness.timePreferencePenalty += startPenalty;
 
         for (const daySchedule of daySchedules) {
             daySchedule.push({
@@ -293,15 +329,13 @@ export class Scheduler {
             });
         }
 
-        fitness.timePreferencePenalty =
-            this.dayFitness(daySchedules[0]) +
-            this.dayFitness(daySchedules[1]) +
-            this.dayFitness(daySchedules[2]) +
-            this.dayFitness(daySchedules[3]) +
-            this.dayFitness(daySchedules[4]);
-
-        fitness.overlapPenalty *= config.overlapPenalty;
-        fitness.timePreferencePenalty *= config.timePreferencePenalty;
+        fitness.timePreferencePenalty +=
+            (this.dayFitness(daySchedules[0]) +
+                this.dayFitness(daySchedules[1]) +
+                this.dayFitness(daySchedules[2]) +
+                this.dayFitness(daySchedules[3]) +
+                this.dayFitness(daySchedules[4])) *
+            config.timePreferencePenalty;
 
         return fitness;
     }

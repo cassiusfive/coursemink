@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ScheduleForm from "./pages/ScheduleForm";
 import ScheduleTool from "./pages/ScheduleTool";
 import HomePage from "./pages/Home";
+import ErrorBoundary from "./pages/ErrorBoundary";
 
 const router = createBrowserRouter([
     {
@@ -15,12 +16,16 @@ const router = createBrowserRouter([
     {
         path: "schedule/form",
         element: <ScheduleForm />,
-        errorElement: <></>,
+        errorElement: <ErrorBoundary title="No schedules found :(" />,
     },
     {
         path: "schedule/tool",
         element: <ScheduleTool />,
-        errorElement: <></>,
+        errorElement: <ErrorBoundary title="Oops! Something Broke" />,
+    },
+    {
+        path: "*",
+        element: <ErrorBoundary title="404: Page Not Found" />,
     },
 ]);
 

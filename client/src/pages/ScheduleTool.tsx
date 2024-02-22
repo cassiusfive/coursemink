@@ -18,6 +18,7 @@ import {
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
 import { Section, Timestamp } from "../shared.types";
 import { WeekEvent } from "../components/WeeklySchedule";
+import ErrorBoundary from "./ErrorBoundary";
 
 type SectionEventProps = {
     section: Section;
@@ -69,6 +70,7 @@ const ScheduleTool = () => {
         },
         {}
     );
+    const [error, setError] = useState<boolean>(false);
 
     const [sections, setSections] = useState<Record<string, Section>>({});
     const [schedules, setSchedules] = useState<string[][]>([]);
@@ -166,6 +168,7 @@ const ScheduleTool = () => {
             );
             if (res.ok) {
                 const json = await res.json();
+                if (json.schedules.length == 0) setError(true);
                 setSchedules(json.schedules);
                 setSections(json.sections);
             }
@@ -173,7 +176,7 @@ const ScheduleTool = () => {
 
         if (!isInit) {
             isInit = true;
-            fetchSchedules().catch(console.error);
+            fetchSchedules();
         }
     }, []);
 
@@ -205,6 +208,10 @@ const ScheduleTool = () => {
             );
         }
     };
+
+    if (error) {
+        return <ErrorBoundary title="No Schedules Found" />;
+    }
 
     return (
         <>

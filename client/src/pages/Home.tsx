@@ -15,18 +15,16 @@ const LaunchApp = () => {
 const Home = () => {
     return (
         <>
-            <section className="mx-auto my-12 flex w-10/12 flex-col-reverse items-center justify-between lg:flex-row">
-                <div className="my-auto flex grow justify-center gap-6">
-                    <div className="flex flex-col gap-4">
-                        <b className=" max-w-96 text-5xl">
-                            Get the most out of your term
-                        </b>
-                        <span className="max-w-96 text-xl text-stone-500">
-                            Tailor a schedule that empowers you to excel, with
-                            Course Mink.
-                        </span>
-                        <LaunchApp />
-                    </div>
+            <section className="mx-auto my-12 flex w-10/12 flex-col-reverse items-center justify-center lg:flex-row">
+                <div className="flex flex-col gap-4">
+                    <b className=" max-w-96 text-5xl">
+                        Get the most out of your term
+                    </b>
+                    <span className="max-w-96 text-xl text-stone-500">
+                        Tailor a schedule that empowers you to excel, with
+                        Course Mink.
+                    </span>
+                    <LaunchApp />
                 </div>
                 <img
                     className="aspect-square max-h-96 max-w-96 grow self-center"
@@ -49,8 +47,8 @@ const Home = () => {
                     <div className="items-start text-xl">
                         Course Mink is a student-oriented class scheduling tool
                         designed to streamline the course registration process.
-                        Simplify provide the classes you plan to take along with
-                        your preferences, and Course Mink will curate schedules
+                        Provide the classes you plan to take along with your
+                        preferences, and Course Mink will curate schedules
                         tailored to your needs.
                     </div>
                     <div className="mt-10 flex items-center">

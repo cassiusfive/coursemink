@@ -151,9 +151,9 @@ class RegistrationScraper {
                             .trim() +
                         " " +
                         edge.node.lastName,
-                    avg_rating: edge.node.avgRating,
-                    avg_difficulty: edge.node.avgDifficulty,
-                    num_ratings: edge.node.numRatings,
+                    avgRating: edge.node.avgRating,
+                    avgDifficulty: edge.node.avgDifficulty,
+                    numRatings: edge.node.numRatings,
                 };
             }
         );

@@ -3,7 +3,7 @@ import ProfServices from "../services/profServices.js";
 
 try {
     const profs = await scraper.scrapeProfessors();
-    await Promise.allSettled(
+    const res = await Promise.allSettled(
         profs.map((prof) => {
             return ProfServices.insertProf(prof);
         })
