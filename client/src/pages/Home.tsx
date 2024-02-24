@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 const LaunchApp = () => {
     return (
         <a href="/schedule/form">
-            <button className="w-fit rounded-lg bg-[#BF3B53] px-3 py-2 text-xl text-white hover:bg-[#962e41]">
+            <button className="w-fit rounded-lg bg-[#FF6700] px-3 py-2 text-xl text-white hover:bg-[#cc5200]">
                 Launch App
             </button>
         </a>

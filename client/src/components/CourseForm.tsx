@@ -93,7 +93,7 @@ const CourseForm = ({ courses, updateFields }: CourseFormProps) => {
 
     return (
         <>
-            <FormWrapper title="What courses are you taking this term?">
+            <FormWrapper title="What courses are you taking next term?">
                 <div className="flex w-full flex-col items-center">
                     <input
                         type="text"

@@ -187,7 +187,7 @@ type AccordionProps = {
 };
 
 const ScheduleAccordion = ({ courses, schedule, colorMap }: AccordionProps) => {
-    const [activeIndex, setActiveIndex] = useState<number>(1);
+    const [activeIndex, setActiveIndex] = useState<number>(0);
 
     const toggleActive = (index: number) => {
         if (index == activeIndex) {
@@ -206,7 +206,7 @@ const ScheduleAccordion = ({ courses, schedule, colorMap }: AccordionProps) => {
                 const index = i++;
                 const panel = (
                     <Panel
-                        key={section.crn}
+                        key={section.id}
                         section={section}
                         active={index == activeIndex}
                         toggleActive={() => toggleActive(index)}
@@ -215,22 +215,20 @@ const ScheduleAccordion = ({ courses, schedule, colorMap }: AccordionProps) => {
                 i++;
                 return panel;
             });
-        return (
-            <>
-                <CourseSpacer
-                    course={course}
-                    color={colorMap[+course.id]}
-                    key={course.code}
-                />
-                {panels}
-            </>
-        );
+        return [
+            <CourseSpacer
+                course={course}
+                color={colorMap[+course.id]}
+                key={course.id}
+            />,
+            panels,
+        ];
     });
 
     return (
         <>
             {accordionItems}
-            <div className="h-1 w-full bg-stone-500"></div>
+            <div className="h-1 w-full bg-stone-500" key="bottom"></div>
         </>
     );
 };

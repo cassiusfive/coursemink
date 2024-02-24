@@ -3,7 +3,7 @@ type ErrorBoundaryProps = {
     description?: string;
 };
 
-const ErrorBoundary = ({ title, description }: ErrorBoundaryProps) => {
+const ErrorBoundary = ({ title }: ErrorBoundaryProps) => {
     return (
         <>
             <div className="my-10 text-center text-4xl">

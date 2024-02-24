@@ -11,6 +11,9 @@ export default class ScheduleController {
     static async createSchedule(req: Request, res: Response): Promise<void> {
         try {
             const courseIds: number[] = req.body.courses;
+            if (courseIds.length > 6) {
+                throw new Error("Too many courses provided.");
+            }
             const courses = await Promise.allSettled(
                 courseIds.map((id) => CourseServices.getCourse(id))
             );

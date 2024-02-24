@@ -1,5 +1,5 @@
 import { useMultistepForm } from "../useMultistepForm";
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Course } from "../shared.types";
 
 import CourseForm from "../components/CourseForm";
@@ -22,7 +22,11 @@ const INITIAL_DATA = {
 };
 
 const ScheduleForm = () => {
-    const [data, setData] = useState<FormData>(INITIAL_DATA);
+    const [data, setData] = useState<FormData>(
+        JSON.parse(
+            localStorage.getItem("formdata") || JSON.stringify(INITIAL_DATA)
+        )
+    );
 
     function updateFields(fields: Partial<FormData>) {
         setData((prev) => {
@@ -34,6 +38,10 @@ const ScheduleForm = () => {
         <CourseForm {...data} updateFields={updateFields} />,
         <PreferenceForm {...data} updateFields={updateFields} />,
     ]);
+
+    useEffect(() => {
+        localStorage.setItem("formdata", JSON.stringify(data));
+    }, [data]);
 
     const navigate = useNavigate();
 

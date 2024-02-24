@@ -96,7 +96,7 @@ export class Scheduler {
         catalog: DeepRequired<Course>[],
         config: SchedulerWeights
     ): string[][] {
-        const iterations = 40000;
+        const iterations = 70000;
         const compareSchedules: ICompare<ScoredSchedule> = (a, b) => {
             if (a.fitness < b.fitness) {
                 return 1;

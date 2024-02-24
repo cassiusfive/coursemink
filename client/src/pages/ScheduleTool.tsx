@@ -5,8 +5,6 @@ import { useState, useEffect } from "react";
 import WeeklySchedule from "../components/WeeklySchedule";
 import Modal from "../components/Modal";
 import ScheduleAccordion from "../components/ScheduleAccordion";
-import { SkeletonEvent } from "../components/WeeklySchedule";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faForward,
@@ -16,9 +14,14 @@ import {
     faX,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark as faRBookmark } from "@fortawesome/free-regular-svg-icons";
+
 import { Section, Timestamp } from "../shared.types";
 import { WeekEvent } from "../components/WeeklySchedule";
 import ErrorBoundary from "./ErrorBoundary";
+
+import Joyride, { STATUS } from "react-joyride";
+import { disableBodyScroll, enableBodyScroll } from "body-scroll-lock";
+import { GridLoader } from "react-spinners";
 
 type SectionEventProps = {
     section: Section;
@@ -55,12 +58,12 @@ const ScheduleTool = () => {
     const data: FormData = useLocation().state;
 
     const colorbank: string[] = [
-        "#BF3B53",
         "#1D3973",
         "#0FBFBF",
         "#F2AE2E",
-        "#F28241",
-        "#2c4c3b",
+        "#FF6700",
+        "#274434",
+        "#BF370C",
     ];
 
     const colors: Record<number, string> = data.courses.reduce(
@@ -70,6 +73,7 @@ const ScheduleTool = () => {
         },
         {}
     );
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<boolean>(false);
 
     const [sections, setSections] = useState<Record<string, Section>>({});
@@ -100,53 +104,6 @@ const ScheduleTool = () => {
         };
     });
 
-    if (events.length == 0) {
-        events.push(
-            SkeletonEvent({
-                start: { hours: 10, minutes: 0 },
-                end: { hours: 10, minutes: 50 },
-                onMonday: true,
-                onTuesday: false,
-                onWednesday: true,
-                onThursday: false,
-                onFriday: true,
-            })
-        );
-        events.push(
-            SkeletonEvent({
-                start: { hours: 10, minutes: 0 },
-                end: { hours: 11, minutes: 50 },
-                onMonday: false,
-                onTuesday: true,
-                onWednesday: true,
-                onThursday: false,
-                onFriday: false,
-            })
-        );
-        events.push(
-            SkeletonEvent({
-                start: { hours: 12, minutes: 0 },
-                end: { hours: 12, minutes: 50 },
-                onMonday: false,
-                onTuesday: false,
-                onWednesday: false,
-                onThursday: true,
-                onFriday: false,
-            })
-        );
-        events.push(
-            SkeletonEvent({
-                start: { hours: 9, minutes: 0 },
-                end: { hours: 11, minutes: 20 },
-                onMonday: false,
-                onTuesday: false,
-                onWednesday: false,
-                onThursday: true,
-                onFriday: false,
-            })
-        );
-    }
-
     useEffect(() => {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set("Content-Type", "application/json");
@@ -171,6 +128,7 @@ const ScheduleTool = () => {
                 if (json.schedules.length == 0) setError(true);
                 setSchedules(json.schedules);
                 setSections(json.sections);
+                setLoading(false);
             }
         };
 
@@ -209,12 +167,89 @@ const ScheduleTool = () => {
         }
     };
 
+    const handleJoyrideCallback = (data: any) => {
+        const target = document.querySelector("#schedule-index")!;
+        if (STATUS.RUNNING == data.status) {
+            disableBodyScroll(target);
+        } else {
+            localStorage.setItem("tutorial", "false");
+            enableBodyScroll(target);
+        }
+    };
+
     if (error) {
         return <ErrorBoundary title="No Schedules Found" />;
     }
 
+    if (loading) {
+        return (
+            <div className=" absolute bottom-0 left-0 right-0 top-0 m-auto flex flex-col justify-center text-center">
+                <div className="text-5xl">
+                    <b>Finding schedules</b>
+                </div>
+                <div className="my-10 text-center">
+                    <GridLoader size={30} />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
+            <Joyride
+                continuous
+                run={JSON.parse(localStorage.getItem("tutorial") || "true")}
+                steps={[
+                    {
+                        content: (
+                            <div className="text-2xl">
+                                <b>Welcome to Course Mink!</b>
+                                <img
+                                    src="/mink-working.jpeg"
+                                    alt="mink on computer"
+                                />
+                            </div>
+                        ),
+                        target: "body",
+                        placement: "center",
+                    },
+                    {
+                        content:
+                            "On this page you can view a multitude of different schedules ranked based on your preferences.",
+                        target: "body",
+                        placement: "center",
+                    },
+                    {
+                        content:
+                            "This shows the total number of schedules and the current rank of the schedule you're looking at.",
+                        target: "#schedule-index",
+                    },
+                    {
+                        content:
+                            "This button lets you navigate to the next schedule.",
+                        target: "#next-schedule",
+                    },
+                    {
+                        content:
+                            "This button displays more information about the current schedule, including professor ratings, location, and availability.",
+                        target: "#more-info",
+                    },
+                    {
+                        content:
+                            "This button allows you to save the current schedule, which will show up at the top left.",
+                        target: "#save-schedule",
+                    },
+                ]}
+                hideCloseButton
+                showSkipButton
+                showProgress
+                disableOverlayClose
+                disableCloseOnEsc
+                disableScrolling
+                callback={handleJoyrideCallback}
+                styles={{ options: { primaryColor: "#FF6700" } }}
+            />
+
             {infoActive && (
                 <Modal>
                     <div className="flex h-[calc(100%-14rem)] w-9/12 flex-col rounded-md bg-white">
@@ -267,7 +302,7 @@ const ScheduleTool = () => {
             </div>
             <footer className=" fixed bottom-0 z-40 flex min-h-20 w-dvw justify-between bg-stone-500 px-5 align-middle text-white">
                 <div className="flex shrink grow basis-0 items-center justify-center text-nowrap text-3xl ">
-                    <b className="">
+                    <b className="" id="schedule-index">
                         {scheduleIndex + 1} / {schedules.length}
                     </b>
                 </div>
@@ -283,14 +318,18 @@ const ScheduleTool = () => {
                     </button>
                     <button
                         className={
-                            "ml-5 px-2  transition duration-200 hover:scale-125 active:scale-90 " +
+                            "ml-5 px-2 transition duration-200 hover:scale-125 active:scale-90 " +
                             (scheduleIndex < schedules.length - 1
                                 ? ""
                                 : "collapse")
                         }
                         onClick={() => next()}
                     >
-                        <FontAwesomeIcon icon={faForward} size="3x" />
+                        <FontAwesomeIcon
+                            icon={faForward}
+                            size="3x"
+                            id="next-schedule"
+                        />
                     </button>
                 </div>
                 <div className="flex shrink grow basis-0 items-center justify-evenly text-4xl ">
@@ -298,6 +337,7 @@ const ScheduleTool = () => {
                         className="px-5 transition duration-200 hover:scale-125 active:scale-90"
                         style={{ color: infoActive ? "#7DD3FC" : "" }}
                         onClick={() => setInfoActive(!infoActive)}
+                        id="more-info"
                     >
                         <FontAwesomeIcon icon={faInfoCircle} />
                     </button>
@@ -305,6 +345,7 @@ const ScheduleTool = () => {
                         className="px-5 transition duration-200 hover:scale-125 active:scale-90"
                         style={{ color: scheduleSaved ? "#FACC15" : "" }}
                         onClick={() => toggleSaved()}
+                        id="save-schedule"
                     >
                         <FontAwesomeIcon
                             icon={scheduleSaved ? faBookmark : faRBookmark}
