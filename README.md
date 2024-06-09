@@ -10,66 +10,32 @@ See it live [here](https://mink-client.fly.dev)!
 [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)](https://expressjs.com/)
 [![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 ## Getting Started
 
-### Prerequisites
+First, [download](https://www.docker.com/) and install **Docker**.
 
--   [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
--   [postgres](https://www.postgresql.org/download/)
-
-### Installation
-
-Create a Postgres DB and load course data to it using:
-
-```sh
-pg_restore -U username -d dbname < db.tar
+Next, clone this repository using the following command:
+```shell
+git clone https://github.com/cassiusfive/coursemink.git
 ```
 
-Navigate to the server directory and install dependencies:
-
-```sh
-cd server && npm install
+Then, use Docker Compose run the project:
+```shell
+docker-compose up -d
 ```
 
-Create a .env in the server directory following this format:
-
-```sh
-# Express
-PORT="3000"
-HOST="127.0.0.1"
-
-# Postgresql
-DATABASE_URI="postgresql://username:password@127.0.0.1:port/dbname"
-```
-
-Now navigate to the client directory and install dependencies:
-
-```sh
-cd ../client && npm install
-```
-
-Create another .env pointing to the backend:
-
-```sh
-VITE_API_ENDPOINT="http://127.0.0.1/v1"
-```
-
-## Usage
-
-To use the project run `npm run dev` in the server and client directories.
-
-Then type “o” into the shell running Vite to open the site running locally in your browser.
+The application will be running locally, and you can access it at http://localhost/8080.
 
 ## Roadmap
 
--   [ ] Export CRNs
--   [ ] View detailed course info
--   [ ] Favorite schedules
--   [ ] Scheduling Algorithm Overhaul
-    -   [ ] Fitness Function redefinition
-    -   [ ] Meta-heuristic local search
--   [ ] Mobile responsiveness
+-   [ ] Automate all scraping
+-   [ ] Ability to filter results
+-   [ ] Support for blocking out times
+-   [ ] Google Authentication
+-   [ ] Support more colleges
+-   [ ] Support multiple terms
+-   [ ] Mobile support
 
 ## Contributing
 
