@@ -1,0 +1,30 @@
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - server
+    environment:
+      - VITE_API_ENDPOINT=http://127.0.0.1:3000/v1
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: psql postgresql://mink:root@localhost:5432/scheduler < db.tar
+    ports:
+      - 3000:3000
+    depends_on:
+      - database
+    environment:
+      - DATABASE_URL=postgresql://mink:root@localhost:5432/scheduler
+  database:
+    image: postgres:16-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=mink
+      - POSTGRES_DB=scheduler

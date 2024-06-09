@@ -1,5 +1,5 @@
 import { useMultistepForm } from "../useMultistepForm";
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Course } from "../shared.types";
 
 import CourseForm from "../components/CourseForm";
@@ -7,7 +7,7 @@ import PreferenceForm from "../components/PreferenceForm";
 import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBackward, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 export type FormData = {
     courses: Course[];
@@ -22,24 +22,43 @@ const INITIAL_DATA = {
 };
 
 const ScheduleForm = () => {
-    const [data, setData] = useState<FormData>(INITIAL_DATA);
+    const [data, setData] = useState<FormData>(
+        JSON.parse(
+            localStorage.getItem("formdata") || JSON.stringify(INITIAL_DATA)
+        )
+    );
+
     function updateFields(fields: Partial<FormData>) {
         setData((prev) => {
             return { ...prev, ...fields };
         });
     }
+
     const { step, next, back, isFirstStep, isLastStep } = useMultistepForm([
         <CourseForm {...data} updateFields={updateFields} />,
         <PreferenceForm {...data} updateFields={updateFields} />,
     ]);
 
+    useEffect(() => {
+        localStorage.setItem("formdata", JSON.stringify(data));
+    }, [data]);
+
     const navigate = useNavigate();
 
     function onSubmit(e: FormEvent) {
         e.preventDefault();
+
+        if (data.courses.length == 0) {
+            return alert("Select at least one course.");
+        }
+        if (data.courses.length > 6) {
+            return alert("Too many courses selected.");
+        }
+
         if (!isLastStep) {
             return next();
         }
+
         navigate("/schedule/tool", { state: data });
     }
 

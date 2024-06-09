@@ -1,27 +1,31 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import {
-    createBrowserRouter,
-    Navigate,
-    RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import ScheduleForm from "./pages/ScheduleForm";
 import ScheduleTool from "./pages/ScheduleTool";
+import HomePage from "./pages/Home";
+import ErrorBoundary from "./pages/ErrorBoundary";
 
 const router = createBrowserRouter([
     {
         path: "/",
         index: true,
-        element: <Navigate to="schedule/form"></Navigate>,
+        element: <HomePage />,
     },
     {
         path: "schedule/form",
         element: <ScheduleForm />,
+        errorElement: <ErrorBoundary title="No schedules found :(" />,
     },
     {
         path: "schedule/tool",
         element: <ScheduleTool />,
+        errorElement: <ErrorBoundary title="Oops! Something Broke" />,
+    },
+    {
+        path: "*",
+        element: <ErrorBoundary title="404: Page Not Found" />,
     },
 ]);
 

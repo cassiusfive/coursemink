@@ -1,4 +1,7 @@
-import { Schedule, SectionEvent } from "../pages/ScheduleTool";
+import { Timestamp } from "../shared.types";
+
+const STARTHOUR = 8;
+const ENDHOUR = 22;
 
 type TimeLabelProps = {
     time: number;
@@ -15,70 +18,21 @@ const TimeLabel = ({ time }: TimeLabelProps) => {
     );
 };
 
-type WeeklyScheduleProps = {
-    colors: Record<number, string>;
-    schedule: Schedule;
+export type WeekEvent = {
+    start: Timestamp;
+    onMonday: boolean;
+    onTuesday: boolean;
+    onWednesday: boolean;
+    onThursday: boolean;
+    onFriday: boolean;
+    children: React.ReactNode;
 };
 
-const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
-    const startHour = 8;
-    const endHour = 22;
+type WeeklyScheduleProps = {
+    events: WeekEvent[];
+};
 
-    type EventColumnProps = {
-        events: SectionEvent[];
-        colors: Record<number, string>;
-    };
-
-    const EventColumn = ({ events, colors }: EventColumnProps) => {
-        return (
-            <ul className="h-full w-full">
-                <div className="relative top-0 z-10 box-border flex h-full w-full flex-col justify-between">
-                    {[...Array(endHour - startHour).keys()].map((i) => {
-                        const section = events.find((section) => {
-                            return section.start === startHour + i;
-                        });
-                        return (
-                            <div
-                                key={i}
-                                className="relative box-border h-full min-h-16 w-full flex-grow basis-0 border-b"
-                            >
-                                {section && (
-                                    <div
-                                        className={
-                                            "absolute z-40 flex w-full rounded-md text-white " +
-                                            colors[section.courseId]
-                                        }
-                                        style={{
-                                            height: `${section.length * 100}%`,
-                                        }}
-                                    >
-                                        <div className="flex h-full w-full grow flex-col justify-between overflow-clip">
-                                            <div className="flex justify-between">
-                                                <div className="px-2">
-                                                    <b>
-                                                        {section.courseCode.toUpperCase()}
-                                                    </b>
-                                                </div>
-                                                <div className="invisible truncate text-nowrap px-2 pb-1 text-right lg:visible">
-                                                    {section.type.toUpperCase()}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className="w-full text-wrap px-2 text-left">
-                                                    {section.professor}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </ul>
-        );
-    };
-
+const WeeklySchedule = ({ events }: WeeklyScheduleProps) => {
     return (
         <div className="relative h-full w-full">
             <div className="flex h-full w-full justify-between">
@@ -87,47 +41,115 @@ const WeeklySchedule = ({ colors, schedule }: WeeklyScheduleProps) => {
                         &nbsp;
                     </div>
                     <ul className="relative flex h-full w-full flex-col">
-                        {[...Array(endHour - startHour).keys()].map((i) => {
+                        {[...Array(ENDHOUR - STARTHOUR).keys()].map((i) => {
                             return (
                                 <li key={i} className="relative grow">
-                                    <TimeLabel time={startHour + i} />
+                                    <TimeLabel time={STARTHOUR + i} />
                                 </li>
                             );
                         })}
                     </ul>
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-20 z-30 box-border border-b bg-white py-2 text-center">
                         Monday
                     </div>
-                    <EventColumn events={schedule.monday} colors={colors} />
+                    <EventColumn
+                        events={events.filter((event) => event.onMonday)}
+                    />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-20 z-30 box-border border-b bg-white py-2 text-center">
                         Tuesday
                     </div>
-                    <EventColumn events={schedule.tuesday} colors={colors} />
+                    <EventColumn
+                        events={events.filter((event) => event.onTuesday)}
+                    />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-20 z-30 box-border border-b bg-white py-2 text-center">
                         Wednesday
                     </div>
-                    <EventColumn events={schedule.wednesday} colors={colors} />
+                    <EventColumn
+                        events={events.filter((event) => event.onWednesday)}
+                    />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-20 z-30 box-border border-b bg-white py-2 text-center">
                         Thursday
                     </div>
-                    <EventColumn events={schedule.thursday} colors={colors} />
+                    <EventColumn
+                        events={events.filter((event) => event.onThursday)}
+                    />
                 </section>
                 <section className="flex grow basis-0 flex-col border-l border-r px-0">
-                    <div className="sticky top-0 z-50 box-border border-b bg-white py-2 text-center">
+                    <div className="sticky top-20 z-30 box-border border-b bg-white py-2 text-center">
                         Friday
                     </div>
-                    <EventColumn events={schedule.friday} colors={colors} />
+                    <EventColumn
+                        events={events.filter((event) => event.onFriday)}
+                    />
                 </section>
             </div>
         </div>
     );
 };
 export default WeeklySchedule;
+
+type EventColumnProps = {
+    events: WeekEvent[];
+};
+
+const EventColumn = ({ events }: EventColumnProps) => {
+    return (
+        <ul className="h-full w-full">
+            <div className="relative top-0 flex h-full w-full flex-col justify-between">
+                {[...Array(ENDHOUR - STARTHOUR).keys()].map((i) => {
+                    const section = events.find((section) => {
+                        return section.start.hours === STARTHOUR + i;
+                    });
+                    return (
+                        <div
+                            key={i}
+                            className="relative h-full min-h-16 w-full flex-grow basis-0 border-b"
+                        >
+                            {section?.children}
+                        </div>
+                    );
+                })}
+            </div>
+        </ul>
+    );
+};
+
+type SkeletonEventOptions = Omit<WeekEvent, "children"> & {
+    end: Timestamp;
+};
+
+export const SkeletonEvent = (params: SkeletonEventOptions): WeekEvent => {
+    const height =
+        100 *
+        (params.end.hours +
+            params.end.minutes / 60 -
+            (params.start.hours + params.start.minutes / 60));
+    const skeleton = (
+        <div
+            className="absolute z-10 flex w-full flex-col justify-between text-nowrap rounded-md bg-stone-500 p-2"
+            style={{
+                height: `${height}%`,
+            }}
+        >
+            <div className="flex animate-pulse justify-between ">
+                <div className="h-2.5 w-14 rounded-full bg-stone-300" />
+                <div className="h-2 w-14 rounded-full bg-stone-300" />
+            </div>
+            <div className="animate-pulse">
+                <div className="h-2 w-24 rounded-full bg-stone-300" />
+            </div>
+        </div>
+    );
+    return {
+        ...params,
+        children: skeleton,
+    };
+};
