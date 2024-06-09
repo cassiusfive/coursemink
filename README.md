@@ -25,7 +25,7 @@ Then, use Docker Compose run the project:
 docker-compose up -d
 ```
 
-The application will be running locally, and you can access it at http://localhost/8080.
+The application will be running locally, and you can access it at http://localhost:8080.
 
 ## Roadmap
 
