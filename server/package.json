@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
-    "db:generate": "drizzle-kit generate:pg --schema ./src/db/schema.ts --out=./src/db/migrations"
+    "db:generate": "drizzle-kit generate"
   },
   "keywords": [],
   "author": "",
