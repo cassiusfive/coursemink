@@ -7,6 +7,7 @@ import {
   pgTable,
   boolean,
 } from "drizzle-orm/pg-core";
+import { Omit } from "utility-types";
 
 export const colleges = pgTable("colleges", {
   id: serial("id").primaryKey(),
@@ -57,3 +58,26 @@ export const sections = pgTable("courses", {
   currentWaitlist: integer("current_waitlist").notNull(),
   location: text("location").notNull(),
 });
+
+export type InsertCollege = typeof colleges.$inferInsert;
+export type SelectCollege = typeof colleges.$inferSelect;
+
+export type InsertTerm = typeof terms.$inferInsert;
+export type SelectTerm = typeof terms.$inferSelect;
+
+export type InsertCourse = typeof courses.$inferInsert;
+export type SelectCourse = typeof courses.$inferSelect;
+
+export type InsertOffering = typeof offerings.$inferInsert;
+export type SelectOffering = typeof offerings.$inferSelect;
+
+export type InsertSection = typeof sections.$inferInsert;
+export type SelectSection = typeof sections.$inferSelect;
+
+export type Section = InsertSection;
+export type Offering = Omit<InsertOffering, "courseId"> & {
+  sections: Section[];
+};
+export type Course = Omit<InsertCourse, "termId"> & {
+  offerings: Offering[];
+};
