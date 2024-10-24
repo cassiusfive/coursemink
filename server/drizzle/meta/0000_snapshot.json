@@ -1,9 +1,37 @@
 {
-  "id": "94a3998b-22e5-4ece-92ed-36b0ca66e89b",
+  "id": "252ab8bc-d63c-4616-8ff7-70bdba407402",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.campuses": {
+      "name": "campuses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.colleges": {
       "name": "colleges",
       "schema": "",
@@ -17,6 +45,13 @@
         "name": {
           "name": "name",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registrationSystem": {
+          "name": "registrationSystem",
+          "type": "registrationSystem",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         }
@@ -36,8 +71,105 @@
           "primaryKey": true,
           "notNull": true
         },
+        "term_id": {
+          "name": "term_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "courses_term_id_terms_id_fk": {
+          "name": "courses_term_id_terms_id_fk",
+          "tableFrom": "courses",
+          "tableTo": "terms",
+          "columnsFrom": [
+            "term_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.offerings": {
+      "name": "offerings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "course_id": {
+          "name": "course_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "offerings_course_id_courses_id_fk": {
+          "name": "offerings_course_id_courses_id_fk",
+          "tableFrom": "offerings",
+          "tableTo": "courses",
+          "columnsFrom": [
+            "course_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.sections": {
+      "name": "sections",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
         "offering_id": {
           "name": "offering_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "term_id": {
+          "name": "term_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -45,6 +177,12 @@
         "crn": {
           "name": "crn",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instructor": {
+          "name": "instructor",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -134,12 +272,25 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "courses_offering_id_offerings_id_fk": {
-          "name": "courses_offering_id_offerings_id_fk",
-          "tableFrom": "courses",
+        "sections_offering_id_offerings_id_fk": {
+          "name": "sections_offering_id_offerings_id_fk",
+          "tableFrom": "sections",
           "tableTo": "offerings",
           "columnsFrom": [
             "offering_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sections_term_id_terms_id_fk": {
+          "name": "sections_term_id_terms_id_fk",
+          "tableFrom": "sections",
+          "tableTo": "terms",
+          "columnsFrom": [
+            "term_id"
           ],
           "columnsTo": [
             "id"
@@ -150,50 +301,14 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "courses_crn_unique": {
-          "name": "courses_crn_unique",
+        "sections_crn_unique": {
+          "name": "sections_crn_unique",
           "nullsNotDistinct": false,
           "columns": [
             "crn"
           ]
         }
       }
-    },
-    "public.offerings": {
-      "name": "offerings",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "course_id": {
-          "name": "course_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offerings_course_id_courses_id_fk": {
-          "name": "offerings_course_id_courses_id_fk",
-          "tableFrom": "offerings",
-          "tableTo": "courses",
-          "columnsFrom": [
-            "course_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
     },
     "public.terms": {
       "name": "terms",
@@ -203,6 +318,12 @@
           "name": "id",
           "type": "serial",
           "primaryKey": true,
+          "notNull": true
+        },
+        "campus_id": {
+          "name": "campus_id",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true
         },
         "code": {
@@ -226,7 +347,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "terms_campus_id_campuses_id_fk": {
+          "name": "terms_campus_id_campuses_id_fk",
+          "tableFrom": "terms",
+          "tableTo": "campuses",
+          "columnsFrom": [
+            "campus_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     }

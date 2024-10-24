@@ -13,7 +13,6 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    command: psql postgresql://mink:root@localhost:5432/scheduler < db.tar
     ports:
       - 3000:3000
     depends_on:

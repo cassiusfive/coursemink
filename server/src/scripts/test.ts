@@ -1,12 +1,11 @@
-import scraper from "../services/scraper.js";
-import CourseServices from "../services/courseServices.js";
+import Banner9Scraper from "./../scrapers/banner9.js";
 
 try {
-  const cs = scraper.scrapeCourse(
-    "CS162",
-    "INTRODUCTION TO COMPUTER SCIENCE II",
+  const scraper = new Banner9Scraper(
+    "https://prodapps.isadm.oregonstate.edu/StudentRegistrationSsb/ssb/",
   );
-  console.log("finished");
+  const courses = await scraper.scrapeAllCourses("202501");
+  console.log(courses);
 } catch (e) {
   if (e instanceof Error) {
     console.error(e);

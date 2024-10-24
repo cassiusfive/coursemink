@@ -31,7 +31,7 @@ RUN npm ci --include=dev
 COPY --link . .
 
 # Apply migrations
-RUN npm run db:migrate
+# RUN npm run db:migrate
 
 # Build application
 RUN npm run build
