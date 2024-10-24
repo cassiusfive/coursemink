@@ -103,7 +103,7 @@ class RegistrationScraper {
 		isSaved
 		}`,
       variables: {
-        count: 9999,
+        count: 999,
         cursor: "VGVhY2hlci0xMjc4",
         query: {
           text: "",
@@ -141,6 +141,7 @@ class RegistrationScraper {
     };
 
     const res = await axios.request(config);
+    console.log(res.data);
     const profs: Professor[] = res.data.data.search.teachers.edges.map(
       (edge: any) => {
         return {
@@ -160,7 +161,7 @@ class RegistrationScraper {
   }
 
   public async scrapeEmptyCourses(): Promise<Course[]> {
-    const cookies = await this.setTerm(202501);
+    const cookies = await this.setTerm(202502);
 
     let set: Set<String> = new Set();
     let courseList: Course[] = [];
@@ -170,7 +171,7 @@ class RegistrationScraper {
       {
         params: {
           txt_campus: "C",
-          txt_term: 202501,
+          txt_term: 202502,
           pageOffset: 0,
           pageMaxSize: 500,
         },
@@ -201,7 +202,7 @@ class RegistrationScraper {
         {
           params: {
             txt_campus: "C",
-            txt_term: 202501,
+            txt_term: 202502,
             pageOffset: coursesSearched,
             pageMaxSize: 500,
           },
@@ -229,7 +230,7 @@ class RegistrationScraper {
   }
 
   public async scrapeCourse(code: string, title: string): Promise<Course> {
-    const cookies = await this.setTerm(202501);
+    const cookies = await this.setTerm(202502);
 
     const [subjectCode, courseNumber] = code
       .split(/([a-zA-Z]+)([0-9]+.+)/)
@@ -240,7 +241,7 @@ class RegistrationScraper {
       {
         params: {
           txt_campus: "C",
-          txt_term: 202501,
+          txt_term: 202502,
           txt_subject: subjectCode,
           txt_courseNumber: courseNumber,
           pageOffset: 0,

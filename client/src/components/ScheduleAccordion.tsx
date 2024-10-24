@@ -11,7 +11,7 @@ const timeString = (start: Timestamp, end: Timestamp) => {
     res += start.hours.toString();
     if (start.minutes) res += ":" + start.minutes.toString().padStart(2, "0");
     res += "-";
-    res += start.hours.toString();
+    res += end.hours.toString();
     if (end.minutes) res += ":" + end.minutes.toString().padStart(2, "0");
     res += end.hours < 12 ? "am" : "pm";
     return res;

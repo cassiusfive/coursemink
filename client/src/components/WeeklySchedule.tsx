@@ -132,11 +132,13 @@ export const SkeletonEvent = (params: SkeletonEventOptions): WeekEvent => {
         (params.end.hours +
             params.end.minutes / 60 -
             (params.start.hours + params.start.minutes / 60));
+    const yOffset = 100 * (params.start.minutes / 60);
     const skeleton = (
         <div
             className="absolute z-10 flex w-full flex-col justify-between text-nowrap rounded-md bg-stone-500 p-2"
             style={{
                 height: `${height}%`,
+                top: `${yOffset}%`,
             }}
         >
             <div className="flex animate-pulse justify-between ">

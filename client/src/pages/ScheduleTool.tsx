@@ -35,11 +35,13 @@ const SectionEvent = ({ section, code, colorMap }: SectionEventProps) => {
         (section.end.hours +
             section.end.minutes / 60 -
             (section.start.hours + section.start.minutes / 60));
+    const yOffset = 100 * (section.start.minutes / 60);
     return (
         <div
             className="absolute z-10 flex w-full flex-col justify-between text-nowrap rounded-md px-1.5 text-white"
             style={{
                 height: `${height}%`,
+                top: `${yOffset}%`,
                 backgroundColor: colorMap[section.courseId],
             }}
         >
