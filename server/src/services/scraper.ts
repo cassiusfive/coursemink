@@ -141,7 +141,7 @@ class RegistrationScraper {
     };
 
     const res = await axios.request(config);
-    console.log(res.data);
+    // console.log(res.data);
     const profs: Professor[] = res.data.data.search.teachers.edges.map(
       (edge: any) => {
         return {
@@ -253,7 +253,11 @@ class RegistrationScraper {
       },
     );
 
-    console.log(courseSearch.data.data);
+    // console.log(courseSearch.data.data);
+      courseSearch.data.data.map((rawSection: any) => {
+        return rawSection.courseTitle;
+      }),
+    );
 
     return this.normalizeCourseData(
       courseSearch.data.data.filter((rawSection: any) => {
@@ -263,10 +267,10 @@ class RegistrationScraper {
   }
 
   private normalizeCourseData(data: any): Course {
-    console.log(data);
     if (!data) {
       throw new Error("No data provided");
     }
+    console.log(data);
     data = data.filter((rawSection: any) => {
       const excludedAttributes = ["HNRS"];
       const excludedTypes = ["Examination for Credit"];
